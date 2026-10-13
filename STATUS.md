@@ -177,5 +177,50 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
     5. *H5:* `device_index = 0xFF` hardcodeado en `mx-cli`, incompatible con receptores Unifying/Bolt (`0x01..0x06`).
     6. *H6:* Regla udev en `99-*.rules` evalúa `uaccess` tarde (después de `73-seat-late.rules`); dependencia de grupo `plugdev` no portable a Arch/Fedora.
     7. *H7:* Bug en decodificación de reportes de error HID++ 1.0 (`0x8F`) en `frame.rs`.
-- **Estado Actual:** Auditoría completada y documentada. Próximo paso: aplicar el Paquete de Parches de Robustez (H1 a H7) y proceder a la especificación de la **Fase 3 (Daemon `systemd --user` & Socket IPC)** con diseño ultra-liviano (<15 MB RAM).
+### 2026-10-13 — Sesión 5: Aplicación y Verificación del Paquete de Parches de Robustez (H1 a H7) (Gemini 3.8 Flash High)
+- **Implementación de Parches de Robustez:**
+  - **H1 (Desconexión limpia):** `hidraw.rs` captura `POLLHUP`, `POLLERR`, `POLLNVAL`, `EOF` y `ENODEV/EIO` emitiendo `HidppError::Disconnected`. `mx-cli` sale limpiamente sin busy-loop a 100% CPU. `EINTR` tratado como transitorio.
+  - **H2 (Guardián RAII Real):** Implementado `DivertGuard<'a, T: Transport>` con `impl Drop` que envía `bfield = 0x02` al salir. Añadida reconciliación al arranque (`reset_all_diverts()`) para normalizar el hardware ante caídas previas. Nueva prueba unitaria `test_divert_guard_raii_drop` pasando en 0.00 s.
+  - **H3 & H4 (Semántica Down/Up y Cero Sleeps):** Implementados `emit_action_down` y `emit_action_up` en `mx-uinput`, eliminando los `thread::sleep` bloqueantes del bucle lector. Ahora soporta pulsación sostenida (Hold), arrastre de ventanas con Super en Wayland/X11 y combinaciones sostenidas (`Alt+Tab`).
+  - **H5 (Autoconexión Dinámica):** `HidppDevice::auto_connect(transport)` sondea `0xFF` (Bluetooth) y slots `0x01..=0x04` (Unifying/Bolt). Eliminado hardcodeo de `0xFF` en `mx-cli`.
+  - **H6 (Reglas udev prioritarias):** Renombrada regla a `rules/70-mx-options.rules` (previo a `73-seat-late.rules`) para correcta asignación de `TAG+="uaccess"`. Actualizado `scripts/install-udev-rules.sh`.
+  - **H7 (Error 0x8F):** Corregida decodificación de tramas de error `0x8F` en `frame.rs` y actualizada prueba unitaria.
+- **Verificación en Hardware y Compilación:**
+  - 14/14 tests unitarios en verde en 0.00 s.
+  - `cargo clippy --workspace -- -D warnings` con 0 advertencias.
+  - Binarios release compilados exitosamente (`mx-cli`, `mx-probe`, `mx-diag`).
+  - `cargo run -p mx-cli -- status` probado en hardware real (`/dev/hidraw3`): autoconexión en `0xFF` exitosa, batería 20%, 7 botones listados.
+- **Commit:** `e6db570` (`feat(core,uinput,cli,rules): apply post-audit robustness patches (H1-H7)`).
+
+---
+
+## 8. Instrucciones Detalladas para la Siguiente Sesión (Fase 3: Daemon & IPC)
+
+> **AL RETOMAR LA SESIÓN NUEVA:** El nuevo agente debe leer esta sección para arrancar de inmediato sin perder tiempo ni re-preguntar lo ya cerrado.
+
+### Contexto y Punto de Partida
+- El hardware objetivo es el **Logitech MX Vertical** (`046d:b020`) sobre Bluetooth LE (`/dev/hidraw3`), compatible con receptores Unifying/Bolt.
+- Las bases de protocolo (`crates/mx-core`), emulación uinput (`crates/mx-uinput`) y CLI (`crates/mx-cli`) están 100% probadas y blindadas tras la auditoría de 7 subagentes.
+- Rama git: `master` limpia (commit `e6db570` o superior).
+
+### Objetivo de la Siguiente Sesión: FASE 3
+Construir el servicio en segundo plano `mx-daemon` con servicio de usuario `systemd --user` y socket Unix local para control por IPC.
+
+### Hoja de Ruta Paso a Paso:
+1. **Paso 1: Especificación SDD (`specs/F3-daemon-ipc.md`):**
+   - Especificar el protocolo IPC sobre Unix Domain Socket (`$XDG_RUNTIME_DIR/mx-options.sock`, permisos `0600`, validación `SO_PEERCRED`).
+   - Definir comandos IPC JSON: `get_status`, `set_action(cid, action)`, `get_battery`, `reload_profile`.
+   - Especificar la máquina de estados de reconexión y ciclo de vida (suspend/resume).
+2. **Paso 2: Arquitectura Ultra-Liviana (<15 MB RAM) en `crates/mx-daemon`:**
+   - Crear el nuevo crate `crates/mx-daemon` en el workspace Cargo.
+   - Seguir la recomendación de La Fábrica (`docs/AUDITORIA_FASE_0_1.md`): **un único hilo lector dedicado con `poll` exclusivo sobre `/dev/hidraw`**, despachando eventos por `std::sync::mpsc`. Evitar runtime pesado de Tokio multi-thread si no es estrictamente necesario (o usar `current_thread`).
+   - Reconciliación al arranque: invocar `device.reset_all_diverts()` para garantizar limpieza de CIDs huérfanos antes de aplicar perfiles.
+   - Instalar `flock` sobre `$XDG_RUNTIME_DIR/mx-options.lock` (singleton estricto).
+3. **Paso 3: Servicio `systemd --user`:**
+   - Crear unidad `systemd/user/mx-options.service` con `Restart=on-failure`, `KillSignal=SIGTERM`, `TimeoutStopSec=3s`.
+4. **Paso 4: Árbitros Objetivos y Cierre:**
+   - `cargo test --workspace` pasando al 100%.
+   - `cargo clippy --workspace -- -D warnings` con 0 advertencias.
+   - Verificación en hardware: daemon corriendo en segundo plano capturando pulsaciones del botón superior (CID `0x00FD`) y reconectando tras desconexión/suspensión en $< 5\text{ s}$.
+
 
