@@ -155,8 +155,27 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
 - **Herramienta CLI interactiva (`mx-cli`):**
   - Soporte de subcomandos: `divert`, `status`, `reset`.
   - Ciclo de vida RAII: al terminar por `Ctrl+C` o señal `SIGTERM`, desactiva el divert en el firmware y destruye el dispositivo uinput sin dejar botones muertos.
-- **Verificación y Pruebas:**
+- **Verificación y Pruebas en Hardware Real:**
   - 13/13 tests unitarios pasando en 0.00 s en el workspace.
   - `cargo clippy --workspace -- -D warnings` con 0 advertencias.
   - Compilación release exitosa con binarios ultralivianos (`mx-cli`: 2.1 MB, `mx-probe`: 2.0 MB, `mx-diag`: 530 KB).
-- **Estado Actual:** Fase 1 completada. Listo para interactuar con hardware y avanzar a la **Fase 3 (Daemon `systemd --user` & Socket IPC)**.
+  - Verificado en hardware real: pulsación del botón superior (CID 0x00FD) inyectó `SingleKey(KEY_LEFTMETA)` (Super/Meta) en GNOME Wayland con captura asíncrona.
+
+### 2026-10-13 — Sesión 4: Auditoría Grupal F0 & F1 (7 Subagentes) y Monitoreo de Tanda (Gemini 3.8 Flash High)
+- **Ejecución de la Tanda Colegiada:**
+  - Se lanzó `scripts/run-audit-tanda.sh` con los 7 subagentes bajo `systemd-run --user --scope -p MemoryMax=2G`, `< /dev/null` y concurrencia máxima de 2 puestos simultáneos.
+  - Modelos evaluadores: `deepseek-v4.1-flash`, `claude-haiku-5-5`, `muse-spark-1.3-contributor`, `glm-5.3-flash`, `gpt-6-luna`, `mimo-v2.6-flash`, `qwen3.8-flash`.
+  - Monitoreo en vivo de PIDs, timestamps, exit codes y tamaño de logs en `.superpowers/logs/`.
+  - Más de 85.000 caracteres de análisis técnico extraídos en `.superpowers/audit_f0_f1/reports/`.
+- **Dictamen Consolidado en [`docs/AUDITORIA_FASE_0_1.md`](docs/AUDITORIA_FASE_0_1.md):**
+  - **Calificación:** 🟡 Aprobado como Prototipo / 🔴 Riesgo Alto para Daemon si no se aplican mejoras previas.
+  - **Hallazgos Críticos detectados:**
+    1. *H1:* Lazo de CPU al 100% en `mx-cli` cuando el ratón se apaga o pierde Bluetooth (`POLLERR/POLLHUP` no tratado).
+    2. *H2:* La promesa de "Zero Dead Buttons" / RAII no está implementada con `impl Drop` (solo código lineal al final de `while`); un `SIGKILL` o caída deja el botón muerto en firmware sin reconciliación al inicio.
+    3. *H3:* Semántica Down/Up rota: el código emite un clic completo instantáneo (`emit_click`) al detectar press, impidiendo mantener teclas presionadas (hold, drag con Super, Alt+Tab).
+    4. *H4:* `sleep(10ms)` bloqueante en el camino caliente del bucle de lectura de `/dev/hidraw`.
+    5. *H5:* `device_index = 0xFF` hardcodeado en `mx-cli`, incompatible con receptores Unifying/Bolt (`0x01..0x06`).
+    6. *H6:* Regla udev en `99-*.rules` evalúa `uaccess` tarde (después de `73-seat-late.rules`); dependencia de grupo `plugdev` no portable a Arch/Fedora.
+    7. *H7:* Bug en decodificación de reportes de error HID++ 1.0 (`0x8F`) en `frame.rs`.
+- **Estado Actual:** Auditoría completada y documentada. Próximo paso: aplicar el Paquete de Parches de Robustez (H1 a H7) y proceder a la especificación de la **Fase 3 (Daemon `systemd --user` & Socket IPC)** con diseño ultra-liviano (<15 MB RAM).
+
