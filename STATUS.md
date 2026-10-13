@@ -5,6 +5,19 @@
 > Perfil del proyecto: tauri-app (Rust Core + Svelte/Tailwind UI)
 > Creado: 2026-10-13
 
+> ### 📌 RESUMEN EJECUTIVO DE RELEVO RÁPIDO (LEER AL INICIAR SESIÓN)
+> - **Última Sesión Cerrada:** Sesión 7 (Fase 3: Daemon `systemd --user` & Socket IPC (`mx-daemon`)). Commit: `c19d592`.
+> - **Fases Aprobadas:**
+>   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-probe`) — Kill-gate superado.
+>   - ✅ **Fase 1:** Divert de Botón Superior & Inyección Virtual (`mx-uinput`, `mx-cli`) — RAII y Down/Up verificado.
+>   - ✅ **Fase 2:** Reglas `udev` (`70-mx-options.rules`) — Permisos de usuario sin `sudo`.
+>   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS 3.3 MB (<15 MB), parada limpia <0.1 s, fail-safe Zero Stuck Keys verificado, auditoría colegiada de 4 subagentes superada.
+> - **Siguiente Fase:** **Fase 4: GUI Tauri v2 (Svelte + Tailwind & System Tray)**.
+> - **Acción Inmediata al Retomar:**
+>   1. Consultar la Sección 8 para ver la arquitectura acordada de la GUI Tauri v2 (Backend Rust `UnixStream` con `#[tauri::command]` + Frontend Svelte).
+>   2. Redactar especificación inicial SDD en `specs/F4-gui-tauri.md`.
+>   3. Despachar la tanda colegiada a los 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) mediante `scripts/run-dev.sh` antes de codificar.
+
 ---
 
 ## 1. Objetivo
