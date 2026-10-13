@@ -1,0 +1,21 @@
+[package]
+name = "mx-probe"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+default-run = "mx-probe"
+
+[[bin]]
+name = "mx-probe"
+path = "src/main.rs"
+
+[[bin]]
+name = "mx-diag"
+path = "src/diag.rs"
+
+[dependencies]
+mx-core = { path = "../mx-core" }
+log = { workspace = true }
+env_logger = { workspace = true }
+libc = "0.2"

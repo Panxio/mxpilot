@@ -1,0 +1,13 @@
+[package]
+name = "mx-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror = { workspace = true }
+log = { workspace = true }
+libc = "0.2"
+
+[dev-dependencies]

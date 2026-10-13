@@ -1,0 +1,13 @@
+[package]
+name = "mx-uinput"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+evdev = "0.13"
+thiserror = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]

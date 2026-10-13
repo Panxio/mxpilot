@@ -1,0 +1,13 @@
+[package]
+name = "mx-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+mx-core = { path = "../mx-core" }
+mx-uinput = { path = "../mx-uinput" }
+log = { workspace = true }
+env_logger = { workspace = true }
+libc = "0.2"
