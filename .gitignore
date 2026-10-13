@@ -1,0 +1,11 @@
+# deps
+node_modules/
+target/
+dist/
+# graphify (memoria de grafo: cost es local)
+graphify-out/cost.json
+# logs de sub-agentes y permisos locales (regenerables / personales)
+.superpowers/
+.claude/settings.local.json
+# os
+.DS_Store
