@@ -60,7 +60,7 @@ Desarrollar una suite moderna, nativa y ultraliviana para Linux que reemplace Lo
 Para no perder contexto ni agotar la cuota de la sesión:
 * **Alarma en 160k tokens:** No iniciar nuevas unidades de trabajo. Comenzar cierre documental en `STATUS.md` y preparar el relevo.
 * **Aviso Final en 200k tokens:** Guardar todo cambio pendiente y sugerir al usuario rotar de sesión en un punto natural.
-* **Mecanismo:** Hook global `PreInvocation` activo en `~/.gemini/config/hooks.json` ejecutando `~/.gemini/config/hooks/hook-contexto-agy.sh`. No bloquea herramientas; inyecta avisos efímeros de advertencia.
+* **Mecanismo verificado tras update de Antigravity:** Hook global `PreInvocation` activo en `~/.gemini/config/hooks.json` ejecutando `~/.gemini/config/hooks/hook-contexto-agy.sh`. Probado funcional (inyecta advertencias sin bloquear herramientas).
 
 ---
 
@@ -81,35 +81,25 @@ Para no perder contexto ni agotar la cuota de la sesión:
 
 ---
 
-## 6. Estado Actual y Hoja de Ruta
+## 6. Carta Gantt y Matriz de Delegación de Subagentes
 
-### Estado:
-- **Sesión 0 completada:** Inicialización del proyecto con La Fábrica (`factory`), fusión de reglas de gobernanza (`tauri-app`), incorporación de documentos de brainstorming (`docs/BRAINSTORMING.md`), catálogo de subagentes (`docs/SUBAGENTES.md`), y configuración de scripts de lanzamiento (`scripts/run-dev.sh`).
+```
+Fase 0: Sonda & Protocolo (mx-probe)   [████░░░░░░░░░░░░░░░░]  Kill-gate crítico
+Fase 1: Divert & uinput (mx-cli)       [░░░░████░░░░░░░░░░░░]  Validación evtest
+Fase 2: Permisos udev                  [░░░░░░░░██░░░░░░░░░░]  Ejecución no-root
+Fase 3: Daemon systemd & IPC           [░░░░░░░░░░████░░░░░░]  Hotplug & reconexión
+Fase 4: GUI Tauri v2 (Svelte)          [░░░░░░░░░░░░░░████░░]  Tray & remapeador
+Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░░░░░░██]  Distribución limpia
+```
 
-### Fases de Implementación:
-- [ ] **Fase 0 — Protocolo y Sonda de Hardware (`mx-probe`):**
-  - Implementar handshake HID++ 2.0 sobre `hidraw`.
-  - Descubrimiento de features (0x0000, 0x0001, 0x1000, 0x1B04).
-  - Validar soporte en **USB, receptor Unifying/Bolt y Bluetooth**.
-  - *Kill-gate:* Si el divert no funciona en BT ni en receptor, replantear antes de avanzar.
-- [ ] **Fase 1 — Divert + `uinput` CLI (`mx-cli`):**
-  - Desviar el botón superior (CID comprobado).
-  - Emitir evento virtual de tecla/ratón con `uinput`.
-  - Validación con `evtest` en Wayland y X11.
-- [ ] **Fase 2 — Reglas udev e Instalador de Permisos:**
-  - Crear regla udev para vendor `046d` y dispositivo `/dev/uinput`.
-  - Probar ejecución de herramientas sin permisos de root.
-- [ ] **Fase 3 — Daemon de Sistema (`mx-daemon`) e IPC:**
-  - Servicio `systemd --user`.
-  - Listener de socket Unix y protocolo de mensajes.
-  - Watcher de hotplug y reconexión tras suspensión.
-- [ ] **Fase 4 — Frontend Gráfico (`mx-gui` Tauri v2):**
-  - Scaffold de Tauri + Svelte + Tailwind.
-  - Esquema interactivo del ratón y remapeo de botones.
-  - Integración en System Tray y estado de batería.
-- [ ] **Fase 5 — Empaquetado y Coexistencia:**
-  - Generación de `.deb` instalable.
-  - Detección de servicios conflictivos (`solaar`, `logid`) y advertencia al usuario.
+| Fase | Tarea Principal | Modelo Principal / Delegación | Árbitro Objetivo (Criterio de Cierre) |
+|---|---|---|---|
+| **F0: Protocolo (`mx-probe`)** | Handshake HID++ 2.0, lectura de batería, dump de features (0x0000, 0x1000, 0x1B04) en USB, Unifying y BT. | **Gemini 3.8 Flash High** (Orquestador) + `opencode-go/mimo-v2.6-flash` (validación de tablas HID++) | Dump de features exitoso en hardware real; batería coherente vs Solaar. **Kill-gate:** Divert soportado en BT/receptor. |
+| **F1: Divert + `uinput` (`mx-cli`)** | Enviar paquete de diversion al CID del botón superior; emitir pulsación virtual vía `/dev/uinput`. | **Gemini 3.8 Flash High** + `opencode-go/claude-haiku-5-5` (specs & arnés TDD) | `evtest` registra 1 evento por pulsación (≥99% sin duplicados en 10 min) en Wayland y X11. |
+| **F2: Permisos `udev`** | Regla en `/etc/udev/rules.d/` con `TAG+="uaccess"` para vendor `046d` y uinput. | `opencode-go/deepseek-v4.1-flash` (revisión de reglas de seguridad Linux) | `mx-probe` y `mx-cli` ejecutan como usuario no-root sin `sudo`. |
+| **F3: Daemon `systemd` & IPC** | Daemon en segundo plano con reconexión automática tras suspensión; socket Unix seguro. | **Gemini 3.8 Flash High** + `opencode-go/qwen3.8-flash` (resiliencia Bluetooth) | Supera suspensión + 20 reconexiones BT; reconexión < 5 s; p95 < 20 ms; RAM < 15 MB. |
+| **F4: GUI Tauri v2** | Interfaz en Svelte + Tailwind con System Tray, selector de atajos y estado de batería. | **Gemini 3.8 Flash High** | RAM total < 80 MB; bundle < 15 MB; control reactivo del daemon vía socket. |
+| **F5: Empaquetado & Convivencia** | Creación de `.deb`; detector de conflictos con `solaar` o `logid`. | **Gemini 3.8 Flash High** + `opencode-go/muse-spark-1.3` (telemetría / `mx-diag`) | Instalación limpia en Ubuntu/Debian; detección y aviso sin duplicar divert. |
 
 ---
 
@@ -120,3 +110,11 @@ Para no perder contexto ni agotar la cuota de la sesión:
 - Migración y consolidación de decisiones de brainstorming de la sesión previa (`e3641738-eb0c-4c7a-8ef8-67bdb2465ed4`): síntesis de los 7 subagentes OpenCode Go y Gemini.
 - Creación de `docs/BRAINSTORMING.md`, `docs/SUBAGENTES.md`, `scripts/run-dev.sh` y `hooks/`.
 - Definición de objetivos, no-goals, guante de restricciones y metas numéricas (Pilar 7).
+
+### 2026-10-13 — Sesión 1: Validación de Entorno Antigravity 2.0 y Plan de Fases (Gemini 3.8 Flash High)
+- **Verificación post-actualización de Antigravity 2.0:**
+  - El hook de cuota de tokens (`hook-contexto-agy.sh`) fue testeado con simulación de 165k tokens: funciona al 100% inyectando la alarma efímera sin romper herramientas.
+  - Se configuró el archivo de permisos del nuevo proyecto en `~/.gemini/config/projects/3a078d09-6b3d-4d17-92ee-6238cc30fea1.json` con `autoExecutionPolicy` para evitar prompts continuos en `/home/panxio/Projects/mx-options-linux`.
+  - Se catalogaron los modelos activos en `agy` (`gemini-3.8-flash-high`, etc.) y `opencode` (`deepseek-v4.1-flash`, `claude-haiku-5-5`, etc.).
+- Elaboración de la Carta Gantt y matriz de asignación de subagentes para las fases F0 a F5.
+- Estado: Preparado para arrancar la **Fase 0 (Protocolo y Sonda de Hardware / `mx-probe`)**.
