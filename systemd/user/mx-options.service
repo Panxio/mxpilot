@@ -1,0 +1,26 @@
+[Unit]
+Description=MX Options Linux Mouse Control Daemon
+Documentation=https://github.com/panxio/mx-options-linux
+After=graphical-session.target
+StartLimitIntervalSec=30s
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/mx-daemon
+Restart=on-failure
+RestartSec=2s
+RestartPreventExitStatus=1
+KillSignal=SIGTERM
+TimeoutStopSec=3s
+RuntimeDirectory=mx-options
+RuntimeDirectoryMode=0700
+StandardOutput=journal
+StandardError=journal
+
+# Endurecimiento defensivo
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX
+
+[Install]
+WantedBy=default.target

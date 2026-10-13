@@ -248,3 +248,14 @@ developer, el puente es por ARCHIVOS, no por terminal:
   - `opencode-go/claude-haiku-5-5`: Criterios de aceptación, specs y descomposición en fases.
   - `gemini-3.8-flash-high` (vía agy): Tareas de soporte y código complementario sin quemar cuota de Claude.
 - **Regla de oro de auditoría:** Nunca aceptar el autoinforme del subagente. Árbitro objetivo (`cargo test`, `evtest`, `clippy`), revisión de `diff` y evidencia antes de integrar.
+
+#### 3. Protocolo Obligatorio de Inicio y Cierre de Sesión / Fase (Mejora Continua)
+Para garantizar la máxima calidad de ingeniería y rigor continuo en cada fase del proyecto:
+1. **Inicio de Sesión / Apertura de Fase:**
+   - El orquestador elabora la primera propuesta técnica (especificación SDD inicial y plan de ejecución en `specs/` y artefacto).
+   - Se despacha una tanda de revisión crítica a los 4 subagentes especializados (`haiku`, `luna`, `deepseek`, `muse`) mediante `scripts/run-dev.sh` / tanda aislada (`systemd-run -p MemoryMax=2G`, `< /dev/null`).
+   - El orquestador evalúa los hallazgos y consolida los consensos válidos en la especificación y el plan antes de escribir código de producción.
+2. **Cierre de Fase / Entrega:**
+   - Al terminar la implementación y validar los árbitros duros (`cargo test`, `clippy`, mediciones numéricas de Pilar 7), el orquestador presenta su reporte de entrega.
+   - Se despacha una tanda de auditoría a los mismos 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) para someter el código a estrés, buscar puntos ciegos y proponer mejoras.
+   - Se incorporan los parches necesarios antes de declarar la fase cerrada en `STATUS.md`.

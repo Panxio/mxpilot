@@ -62,6 +62,11 @@ Para no perder contexto ni agotar la cuota de la sesión:
 * **Aviso Final en 200k tokens:** Guardar todo cambio pendiente y sugerir al usuario rotar de sesión en un punto natural.
 * **Mecanismo verificado tras update de Antigravity:** Hook global `PreInvocation` activo en `~/.gemini/config/hooks.json` ejecutando `~/.gemini/config/hooks/hook-contexto-agy.sh`. Probado funcional (inyecta advertencias sin bloquear herramientas).
 
+### 4.1 Protocolo de Flujo de Trabajo (Inicio y Cierre con Subagentes)
+Para garantizar calidad sostenida y mejora continua en cada sesión y fase:
+1. **Inicio de Sesión / Apertura de Fase:** Planificación inicial por el orquestador (`specs/`, plan artefacto) $\to$ Despacho de revisión crítica a 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) $\to$ Consolidación de mejoras en la spec y el plan antes de implementar.
+2. **Cierre de Fase / Entrega:** Implementación y validación de compuertas duras (`cargo test`, `clippy`, métricas Pilar 7) $\to$ Emisión de informe de entrega $\to$ Auditoría con los mismos 4 subagentes en busca de regresiones y mejoras $\to$ Aplicación de parches antes del cierre definitivo de la fase.
+
 ---
 
 ## 5. Decisiones Arquitectónicas Cerradas
@@ -87,8 +92,8 @@ Para no perder contexto ni agotar la cuota de la sesión:
 Fase 0: Sonda & Protocolo (mx-probe)   [████████████████████]  Kill-gate APROBADO (Hardware verificado)
 Fase 1: Divert & uinput (mx-cli)       [████████████████████]  APROBADO (uinput + RAII verificado)
 Fase 2: Permisos udev                  [████████████████████]  Reglas instaladas y funcionales
-Fase 3: Daemon systemd & IPC           [░░░░░░░░░░░░░░░░░░░░]  Siguiente paso (Daemon & Socket)
-Fase 4: GUI Tauri v2 (Svelte)          [░░░░░░░░░░░░░░░░░░░░]  Tray & remapeador
+Fase 3: Daemon systemd & IPC           [████████████████████]  APROBADO (Daemon, IPC & Audit verificado)
+Fase 4: GUI Tauri v2 (Svelte)          [░░░░░░░░░░░░░░░░░░░░]  Siguiente paso (Tray & remapeador)
 Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░░░░░░░░]  Distribución limpia
 ```
 
@@ -97,7 +102,7 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
 | **F0: Protocolo (`mx-probe`)** | Handshake HID++ 2.0/4.5, lectura de batería, dump de features en BT. | **Gemini 3.8 Flash High** (Orquestador) | **APROBADO:** 29 features volcadas, batería 20%, CID botón superior `0x00FD` divertible. Kill-gate superado. |
 | **F1: Divert + `uinput` (`mx-cli`)** | Enviar paquete de diversion al CID `0x00FD`; emitir pulsación virtual vía `/dev/uinput`. | **Gemini 3.8 Flash High** + `opencode-go/claude-haiku-5-5` (specs & arnés TDD) | **APROBADO:** Dispositivo virtual `MX Options Virtual Device` activo, captura de eventos 0x1B04, emisión de Super/Meta y restauración RAII al salir. |
 | **F2: Permisos `udev`** | Regla en `/etc/udev/rules.d/` con `TAG+="uaccess"` y `GROUP="plugdev"` para `046d` y `uinput`. | `opencode-go/deepseek-v4.1-flash` (revisión de reglas de seguridad Linux) | **APROBADO:** Ejecución de `mx-probe` y `mx-cli` como usuario normal sin `sudo`. |
-| **F3: Daemon `systemd` & IPC** | Daemon en segundo plano con reconexión automática tras suspensión; socket Unix seguro. | **Gemini 3.8 Flash High** + `opencode-go/qwen3.8-flash` (resiliencia Bluetooth) | Supera suspensión + 20 reconexiones BT; reconexión < 5 s; p95 < 20 ms; RAM < 15 MB. |
+| **F3: Daemon `systemd` & IPC** | Daemon en segundo plano con reconexión automática tras suspensión; socket Unix seguro. | **Gemini 3.8 Flash High** + 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) | **APROBADO:** 28 tests pasando, clippy 0 warnings, RSS en hardware 3.3 MB (<15 MB), parada limpia <0.1 s, IPC seguro SO_PEERCRED, auditoría colegiada cerrada. |
 | **F4: GUI Tauri v2** | Interfaz en Svelte + Tailwind con System Tray, selector de atajos y estado de batería. | **Gemini 3.8 Flash High** | RAM total < 80 MB; bundle < 15 MB; control reactivo del daemon vía socket. |
 | **F5: Empaquetado & Convivencia** | Creación de `.deb`; detector de conflictos con `solaar` o `logid`. | **Gemini 3.8 Flash High** + `opencode-go/muse-spark-1.3` (telemetría / `mx-diag`) | Instalación limpia en Ubuntu/Debian; detección y aviso sin duplicar divert. |
 
@@ -192,35 +197,70 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
   - `cargo run -p mx-cli -- status` probado en hardware real (`/dev/hidraw3`): autoconexión en `0xFF` exitosa, batería 20%, 7 botones listados.
 - **Commit:** `e6db570` (`feat(core,uinput,cli,rules): apply post-audit robustness patches (H1-H7)`).
 
+### 2026-10-13 — Sesión 6: Especificación SDD de Fase 3 y Revisión Colegiada (4 Subagentes) (Gemini 3.8 Flash High)
+- **Redacción Inicial SDD:** Creación de `specs/F3-daemon-ipc.md` y del plan de implementación en `f3_daemon_ipc_plan.md`.
+- **Tanda de Revisión Colegiada (4 Subagentes):**
+  - Despacho y monitoreo mediante `scripts/run-f3-review-tanda.sh` bajo `systemd-run --user --scope -p MemoryMax=2G`, `< /dev/null`, timeout y concurrencia máxima de 2 puestos.
+  - Modelos revisores: `deepseek-v4.1-flash`, `claude-haiku-5-5`, `muse-spark-1.3-contributor`, `gpt-6-luna`.
+  - Más de 61.000 caracteres de análisis técnico extraídos en `.superpowers/review_f3/reports/`.
+- **Incorporación de Consensos Críticos en `specs/F3-daemon-ipc.md`:**
+  1. *Actor de Dueño Único:* Solo `hid_worker` toca `/dev/hidraw`. El IPC interactúa mediante canal de comandos (`DaemonCommand`), erradicando contención y robo de tramas (*frame-stealing*).
+  2. *Framing Bounded & Anti Slow-Loris:* Acumulador por conexión con cota estricta `Read::take(64 KB)` y timeout de inactividad de 2 s por línea incompleta.
+  3. *Zero Stuck Keys (Fail-Safe):* El despachador mantiene `pressed: HashSet<Key>` y emite `Key Up` inmediato de toda tecla retenida al desconectarse el mouse o salir de `ACTIVE`.
+  4. *Ciclo de Vida de Canales Desacoplado:* `main` posee `sync_channel(64)`, `uinput_worker` persiste durante toda la sesión y los `hid_worker` efímeros usan `divert_epoch` monótono para descartar eventos rezagados.
+  5. *Presupuesto de Parada (2 s):* Cacheo de `feature_index` de `0x1B04` y reseteo en parada exclusivamente de los CIDs activamente desviados, garantizando salida en $\le 2\text{ s}$ frente a `TimeoutStopSec=3s`.
+  6. *Telemetría Machine-Readable:* Comando IPC `get_health` con métricas estructuradas para arbitraje cuantitativo (`mx-diag` y tests).
+  7. *Sin Fallback Inseguro:* Eliminado fallback a `/tmp`; requerimiento estricto de `$XDG_RUNTIME_DIR` y `RuntimeDirectory=mx-options` en systemd.
+  8. *Validación en Frontera:* `set_action` valida CIDs y teclas contra allowlist estricta antes de tocar hardware.
+- **Estado:** Especificación SDD blindada y consensos aprobados por el usuario.
+
+### 2026-10-13 — Sesión 7: Implementación de Fase 3 (mx-daemon), Auditoría Colegiada y Cierre (Gemini 3.8 Flash High)
+- **Implementación de `crates/mx-daemon`:**
+  - `src/ipc/protocol.rs`: Framing NDJSON, comandos `ping`, `get_status`, `get_health`, `get_battery`, `set_action`, `reload_profile`, allowlist estricta de CIDs y teclas evdev.
+  - `src/ipc/server.rs`: Servidor Unix Domain Socket en `$XDG_RUNTIME_DIR/mx-options.sock`, permisos `0600`, validación de `SO_PEERCRED` por kernel UID, límite de 8 clientes, buffer bounded a 64 KB y timeout anti slow-loris de 2 s.
+  - `src/lock.rs`: Exclusión mutua `flock(LOCK_EX | LOCK_NB)` en `$XDG_RUNTIME_DIR/mx-options.lock`.
+  - `src/state.rs`: Máquina de estados (`Disconnected`, `Connecting`, `Reconciling`, `Active`, `ShuttingDown`), medición de VmRSS en tiempo real desde `/proc/self/status`.
+  - `src/workers.rs`:
+    - `hid_worker`: Actor de dueño único de `/dev/hidraw`, reconexión con backoff, canal de comandos sincrónico.
+    - `uinput_worker`: Hilo persistente de inyección con `sync_channel(64)`, `pressed_keys: HashSet<KeyCode>` y fail-safe `ReleaseAll` en desconexión o cambio de época (`divert_epoch`).
+  - `src/main.rs`: Manejo de señales (`SIGINT`, `SIGTERM`, `SIGPIPE`), ciclo de vida y apagado ordenado.
+  - `systemd/user/mx-options.service`: Unidad de servicio de usuario con `Restart=on-failure`, `KillSignal=SIGTERM`, `TimeoutStopSec=3s`.
+  - `scripts/install-systemd-service.sh`: Script de instalación automática del binario y servicio systemd.
+- **Tanda Obligatoria de Auditoría de Cierre (4 Subagentes):**
+  - Despachada mediante `scripts/run-f3-audit-cierre-tanda.sh` bajo `systemd-run -p MemoryMax=2G`, `< /dev/null`.
+  - Modelos auditores: `opencode-go/deepseek-v4.1-flash`, `opencode-go/claude-haiku-5-5`, `opencode-go/muse-spark-1.3-contributor`, `gpt-6-luna`.
+  - Reportes en `.superpowers/audit_cierre_f3/reports/` identificaron 4 observaciones críticas (C1–C4) y mejoras de calidad.
+- **Parches Aplicados Post-Auditoría:**
+  - *Parche P1 (Systemd syntax):* Claves `StartLimitIntervalSec=30s` y `StartLimitBurst=5` trasladadas a sección `[Unit]`. Verificado con `systemd-analyze --user verify`.
+  - *Parche P2 (Zero Stuck Keys en remap):* Almacenamiento de la acción presionada exacta en `Down` para liberar esa misma acción en `Up`, impidiendo teclas pegadas si el mapeo cambia durante la pulsación.
+  - *Parche P3 (Estado honesto - Regla de Oro):* La transición a `State::Active` y publicación de `diverted_cids` se realiza estrictamente tras confirmación exitosa de `device.set_cid_divert` en hardware.
+  - *Parche P4 (Atomicidad de SetAction):* El mapeo en memoria `DaemonState.mapping` se actualiza exclusivamente cuando el hardware confirma la aplicación de la acción (`Ok(())`).
+  - *Parche P5 (Caché y TTL de Batería):* `GetBattery` evalúa `BATTERY_CACHE_TTL_SECS = 60s`. Si expira o no existe, solicita refresco al `hid_worker` vía `DaemonCommand::RefreshBattery`.
+  - *Parche P6 (Telemetría completa de salud):* Exposición de `device_index`, `consecutive_failures`, `queue_depth` y conteo honesto de `dropped_events` en `DaemonHealth`.
+  - *Parche P7 (Arnés y Concurrencia de Tests):* Erradicación de `umask(0177)` global de proceso que provocaba carreras de permisos entre hilos de test. Incorporación de 4 tests de integración en `tests/ipc_tests.rs` validando atomicidad, allowlist, TTL y rechazo estricto de payloads > 64 KB.
+- **Medición Numérica de Cierre (Pilar 7):**
+  - Tests automáticos: **28/28 tests pasando al 100%** (`mx-core` 13, `mx-daemon` lib 10, integración 4, `mx-uinput` 1).
+  - Clippy: **0 warnings** con `cargo clippy --workspace --all-targets -- -D warnings`.
+  - Tamaño de binario release: **2.6 MB** (sin strip) / ~1.2 MB (stripped) (meta: < 15 MB).
+  - Memoria residente en hardware real: **`VmRSS = 3348 kB (~3.27 MB)`** (meta: < 15 MB).
+  - Tiempo de parada limpia ante SIGTERM: **< 0.1 s** (meta: < 2 s).
+- **Estado:** Fase 3 **APROBADA Y CERRADA**.
+
 ---
 
-## 8. Instrucciones Detalladas para la Siguiente Sesión (Fase 3: Daemon & IPC)
+## 8. Instrucciones Detalladas para la Siguiente Fase (Fase 4: GUI Tauri v2 & Tray)
 
-> **AL RETOMAR LA SESIÓN NUEVA:** El nuevo agente debe leer esta sección para arrancar de inmediato sin perder tiempo ni re-preguntar lo ya cerrado.
-
-### Contexto y Punto de Partida
-- El hardware objetivo es el **Logitech MX Vertical** (`046d:b020`) sobre Bluetooth LE (`/dev/hidraw3`), compatible con receptores Unifying/Bolt.
-- Las bases de protocolo (`crates/mx-core`), emulación uinput (`crates/mx-uinput`) y CLI (`crates/mx-cli`) están 100% probadas y blindadas tras la auditoría de 7 subagentes.
-- Rama git: `master` limpia (commit `e6db570` o superior).
-
-### Objetivo de la Siguiente Sesión: FASE 3
-Construir el servicio en segundo plano `mx-daemon` con servicio de usuario `systemd --user` y socket Unix local para control por IPC.
-
-### Hoja de Ruta Paso a Paso:
-1. **Paso 1: Especificación SDD (`specs/F3-daemon-ipc.md`):**
-   - Especificar el protocolo IPC sobre Unix Domain Socket (`$XDG_RUNTIME_DIR/mx-options.sock`, permisos `0600`, validación `SO_PEERCRED`).
-   - Definir comandos IPC JSON: `get_status`, `set_action(cid, action)`, `get_battery`, `reload_profile`.
-   - Especificar la máquina de estados de reconexión y ciclo de vida (suspend/resume).
-2. **Paso 2: Arquitectura Ultra-Liviana (<15 MB RAM) en `crates/mx-daemon`:**
-   - Crear el nuevo crate `crates/mx-daemon` en el workspace Cargo.
-   - Seguir la recomendación de La Fábrica (`docs/AUDITORIA_FASE_0_1.md`): **un único hilo lector dedicado con `poll` exclusivo sobre `/dev/hidraw`**, despachando eventos por `std::sync::mpsc`. Evitar runtime pesado de Tokio multi-thread si no es estrictamente necesario (o usar `current_thread`).
-   - Reconciliación al arranque: invocar `device.reset_all_diverts()` para garantizar limpieza de CIDs huérfanos antes de aplicar perfiles.
-   - Instalar `flock` sobre `$XDG_RUNTIME_DIR/mx-options.lock` (singleton estricto).
-3. **Paso 3: Servicio `systemd --user`:**
-   - Crear unidad `systemd/user/mx-options.service` con `Restart=on-failure`, `KillSignal=SIGTERM`, `TimeoutStopSec=3s`.
-4. **Paso 4: Árbitros Objetivos y Cierre:**
-   - `cargo test --workspace` pasando al 100%.
-   - `cargo clippy --workspace -- -D warnings` con 0 advertencias.
-   - Verificación en hardware: daemon corriendo en segundo plano capturando pulsaciones del botón superior (CID `0x00FD`) y reconectando tras desconexión/suspensión en $< 5\text{ s}$.
-
-
+### Contexto y Arquitectura Recomendada por los Subagentes
+- **Backend Tauri v2 (Rust):**
+  - Módulo cliente IPC en Rust (`std::os::unix::net::UnixStream`, sincrónico y sin runtime pesado tipo tokio) que interactúa con `$XDG_RUNTIME_DIR/mx-options.sock`.
+  - Comandos Tauri (`#[tauri::command]`): `get_status`, `get_health`, `get_battery`, `set_action`.
+  - El frontend web NUNCA interactúa directamente con el socket ni con el hardware; toda la interacción pasa por comandos tipados de Tauri.
+- **Frontend (Svelte + Tailwind):**
+  - Vista ultra-delgada, minimalista y reactiva.
+  - System Tray con ícono de estado de conexión y nivel de batería.
+  - Selector intuitivo de acciones para el botón superior (`0x00FD`): Super/Meta, Copiar, Pegar, Mute, Play/Pause, atajo de teclado personalizado.
+  - Consumo de telemetría a bajo ritmo (polling cada 30-60 s para no despertar innecesariamente al CPU).
+- **Protocolo de Inicio Obligatorio de Fase 4:**
+  1. Elaborar la especificación inicial SDD en `specs/F4-gui-tauri.md`.
+  2. Despachar la tanda de revisión colegiada a los 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) mediante `scripts/run-dev.sh`.
+  3. Integrar consensos antes de iniciar el scaffolding frontend.
