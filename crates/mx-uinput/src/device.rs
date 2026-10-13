@@ -111,7 +111,38 @@ impl VirtualInput {
         Ok(())
     }
 
-    /// Ejecuta una acción abstracta
+    /// Emite la pulsación (Key Down) de una acción abstracta sin sleeps bloqueantes
+    pub fn emit_action_down(&mut self, action: &Action) -> Result<(), UinputError> {
+        match action {
+            Action::SingleKey(k) => self.emit_press(*k),
+            Action::KeyCombo { modifiers, key } => {
+                for m in modifiers {
+                    self.emit_press(*m)?;
+                }
+                self.emit_press(*key)
+            }
+            Action::MouseButton(b) => self.emit_press(*b),
+            Action::None => Ok(()),
+        }
+    }
+
+    /// Emite la liberación (Key Up) de una acción abstracta en orden inverso sin sleeps bloqueantes
+    pub fn emit_action_up(&mut self, action: &Action) -> Result<(), UinputError> {
+        match action {
+            Action::SingleKey(k) => self.emit_release(*k),
+            Action::KeyCombo { modifiers, key } => {
+                self.emit_release(*key)?;
+                for m in modifiers.iter().rev() {
+                    self.emit_release(*m)?;
+                }
+                Ok(())
+            }
+            Action::MouseButton(b) => self.emit_release(*b),
+            Action::None => Ok(()),
+        }
+    }
+
+    /// Ejecuta una acción abstracta completa (Down + Up)
     pub fn emit_action(&mut self, action: &Action) -> Result<(), UinputError> {
         match action {
             Action::SingleKey(k) => self.emit_click(*k),

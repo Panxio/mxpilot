@@ -69,9 +69,10 @@ pub enum VirtualAction {
 ---
 
 ## 4. Invariantes del Sistema (Pilar 2)
-1. **Garantía RAII (Zero Dead Buttons):** El guardián de divert implementa el trait `Drop`. Al salir del proceso por cualquier motivo (incluyendo `SIGINT` / `Ctrl+C`), se envía automáticamente `bfield = 0x02` para desactivar el divert y devolver el control al microcontrolador.
-2. **Debounce y Deduplicación:** El bucle de eventos mantiene el estado anterior (`is_pressed: bool`). Solo se emite un evento de pulsación (`Key Down` + `SYN_REPORT`) al pasar de falso a verdadero, y un evento de liberación (`Key Up` + `SYN_REPORT`) al pasar de verdadero a falso.
-3. **Aislamiento en Tests:** `VirtualInput` puede probarse de forma simulada en tests unitarios sin requerir permisos de kernel directos.
+1. **Garantía RAII (Zero Dead Buttons) + Reconciliación:** El guardián `DivertGuard` implementa el trait `Drop`. Al salir del proceso por cualquier motivo cooperativo (incluyendo `SIGINT` / `Ctrl+C`), se envía automáticamente `bfield = 0x02` para desactivar el divert. Como salvaguarda ante `SIGKILL` o caídas forzadas, el inicio del proceso ejecuta una rutina de reconciliación (`reset_all_diverts`) para normalizar el estado del firmware.
+2. **Semántica Down / Up Limpia (Soporte Hold & Drag):** El bucle de eventos emite `Key Down` al presionar físicamente el botón y `Key Up` al liberarlo. No se introducen `sleep` bloqueantes en el camino caliente de lectura, garantizando soporte para arrastre de ventanas, combinaciones sostenidas (`Alt+Tab`, `Super`) y repetición de teclas.
+3. **Manejo Seguro de Desconexión:** Ante `POLLHUP`, `POLLERR` o pérdida del enlace de hardware en Bluetooth, el transporte retorna de inmediato `HidppError::Disconnected`, eliminando lazos de 100% de CPU.
+4. **Aislamiento en Tests:** `VirtualInput` y `HidppDevice` pueden probarse de forma simulada en tests unitarios sin requerir permisos de kernel directos.
 
 ---
 

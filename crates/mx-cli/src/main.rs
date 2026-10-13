@@ -64,7 +64,15 @@ fn run_status(path: &PathBuf) {
         }
     };
 
-    let mut device = HidppDevice::new(transport, 0xFF);
+    let mut device = match HidppDevice::auto_connect(transport) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("Error conectando con el ratón: {}", e);
+            std::process::exit(2);
+        }
+    };
+    println!("[OK] Dispositivo conectado en índice 0x{:02X}", device.device_index());
+
     match device.read_battery() {
         Ok(bat) => println!("Batería: {}% ({:?})", bat.percentage, bat.state),
         Err(e) => println!("Error leyendo batería: {}", e),
@@ -102,10 +110,21 @@ fn run_reset(path: &PathBuf) {
         }
     };
 
-    let mut device = HidppDevice::new(transport, 0xFF);
-    match device.set_cid_divert(CID_TOP_BUTTON, false) {
-        Ok(_) => println!("[OK] Botón superior restaurado al firmware."),
-        Err(e) => eprintln!("Error restaurando botón superior: {}", e),
+    let mut device = match HidppDevice::auto_connect(transport) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("Error conectando con el ratón: {}", e);
+            std::process::exit(2);
+        }
+    };
+
+    println!("[OK] Conectado en índice 0x{:02X}", device.device_index());
+    match device.reset_all_diverts() {
+        Ok(count) => println!("[OK] Reconciliación exitosa: {} botones restaurados a firmware original.", count),
+        Err(_) => {
+            let _ = device.set_cid_divert(CID_TOP_BUTTON, false);
+            println!("[OK] Botón superior restaurado al firmware (fallback).");
+        }
     }
 }
 
@@ -143,7 +162,15 @@ fn run_divert(path: &PathBuf, extra_args: &[String]) {
         }
     };
 
-    let mut device = HidppDevice::new(transport, 0xFF);
+    let mut device = match HidppDevice::auto_connect(transport) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("Error conectando con el ratón: {}", e);
+            std::process::exit(2);
+        }
+    };
+
+    println!("[OK] Conectado en índice de dispositivo: 0x{:02X}", device.device_index());
 
     // Obtener el índice dinámico de Feature 0x1B04
     let reprog_feature_idx = match device.get_feature_index(FEATURE_REPROGRAMMABLE_KEYS) {
@@ -154,16 +181,23 @@ fn run_divert(path: &PathBuf, extra_args: &[String]) {
         }
     };
 
-    println!("Activando desvío (Button Diversion) en CID 0x{:04X}...", target_cid);
-    if let Err(e) = device.set_cid_divert(target_cid, true) {
-        eprintln!("Error activando divert en el hardware: {}", e);
-        std::process::exit(2);
-    }
+    // Reconciliación previa al arranque: asegurar que no haya estado residual
+    let _ = device.set_cid_divert(target_cid, false);
+
+    println!("Activando desvío seguro (DivertGuard RAII) en CID 0x{:04X}...", target_cid);
+    let mut divert_guard = match device.divert_guard(target_cid) {
+        Ok(g) => g,
+        Err(e) => {
+            eprintln!("Error activando divert en el hardware: {}", e);
+            std::process::exit(2);
+        }
+    };
 
     println!("=======================================================");
-    println!(">>> BUTTON DIVERSION ACTIVO <<<");
+    println!(">>> BUTTON DIVERSION ACTIVO (PROTEGIDO POR RAII) <<<");
     println!("Botón: Superior DPI Switch (CID 0x{:04X})", target_cid);
     println!("Acción asignada: {:?}", action);
+    println!("Semántica: Key Down al presionar, Key Up al soltar (soporta Hold / Drag)");
     println!("Presiona el botón superior del ratón para probar.");
     println!("Presiona Ctrl+C para salir y restaurar el control original.");
     println!("=======================================================");
@@ -173,7 +207,7 @@ fn run_divert(path: &PathBuf, extra_args: &[String]) {
     // Bucle de captura de eventos
     while RUNNING.load(Ordering::SeqCst) {
         // Escucha con timeout corto para verificar la señal de parada
-        match device.transport.receive(Duration::from_millis(100)) {
+        match divert_guard.transport_mut().receive(Duration::from_millis(100)) {
             Ok(frame) => {
                 // Notificación de divertedButtonsEvent (Feature 0x1B04, function 0)
                 if frame.report_id == LONG_REPORT_ID
@@ -185,13 +219,17 @@ fn run_divert(path: &PathBuf, extra_args: &[String]) {
 
                     if is_pressed && !was_pressed {
                         println!("\n[EVENTO] Botón físico PRESIONADO (Down)");
-                        println!(" -> Inyectando evento uinput: {:?}", action);
-                        if let Err(e) = virtual_input.emit_action(&action) {
+                        println!(" -> Inyectando evento uinput (Key Down): {:?}", action);
+                        if let Err(e) = virtual_input.emit_action_down(&action) {
                             eprintln!("Error emitiendo evento uinput: {}", e);
                         }
                         was_pressed = true;
                     } else if !is_pressed && was_pressed {
                         println!("[EVENTO] Botón físico LIBERADO (Up)");
+                        println!(" -> Inyectando evento uinput (Key Up): {:?}", action);
+                        if let Err(e) = virtual_input.emit_action_up(&action) {
+                            eprintln!("Error emitiendo evento uinput: {}", e);
+                        }
                         was_pressed = false;
                     }
                 }
@@ -202,14 +240,19 @@ fn run_divert(path: &PathBuf, extra_args: &[String]) {
             Err(mx_core::error::HidppError::UnknownReportId(_)) => {
                 // Ignorar reportes de movimiento estándar
             }
+            Err(mx_core::error::HidppError::Disconnected) => {
+                eprintln!("\n[ALERTA] Dispositivo desconectado o enlace de hardware perdido.");
+                break;
+            }
             Err(e) => {
                 eprintln!("Aviso de lectura: {}", e);
+                std::thread::sleep(Duration::from_millis(100));
             }
         }
     }
 
     println!("\n\nCerrando aplicación... Restaurando firmware del mouse...");
-    if let Err(e) = device.set_cid_divert(target_cid, false) {
+    if let Err(e) = divert_guard.release() {
         eprintln!("Aviso: No se pudo restaurar divert en el hardware: {}", e);
     } else {
         println!("[OK] Button Diversion desactivado en el mouse. Firmware restaurado.");

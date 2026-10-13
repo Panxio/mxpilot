@@ -51,20 +51,36 @@ impl Transport for HidrawTransport {
         let ret = unsafe { libc::poll(&mut pfd, 1, timeout_ms) };
 
         if ret < 0 {
-            return Err(HidppError::Io(std::io::Error::last_os_error().to_string()));
+            let err = std::io::Error::last_os_error();
+            if err.raw_os_error() == Some(libc::EINTR) {
+                return Err(HidppError::Timeout);
+            }
+            return Err(HidppError::Io(err.to_string()));
         }
         if ret == 0 {
             return Err(HidppError::Timeout);
         }
 
+        // Si el kernel reporta error, cuelgue o nodo inválido, el hardware se desconectó
+        if (pfd.revents & (libc::POLLERR | libc::POLLHUP | libc::POLLNVAL)) != 0 {
+            return Err(HidppError::Disconnected);
+        }
+
         let mut buf = [0u8; 64];
-        let n = self
-            .file
-            .read(&mut buf)
-            .map_err(|e| HidppError::Io(format!("Error leyendo /dev/hidraw: {}", e)))?;
+        let n = match self.file.read(&mut buf) {
+            Ok(n) => n,
+            Err(e) => {
+                if let Some(code) = e.raw_os_error() {
+                    if code == libc::ENODEV || code == libc::EIO || code == libc::ESHUTDOWN {
+                        return Err(HidppError::Disconnected);
+                    }
+                }
+                return Err(HidppError::Io(format!("Error leyendo /dev/hidraw: {}", e)));
+            }
+        };
 
         if n == 0 {
-            return Err(HidppError::Timeout);
+            return Err(HidppError::Disconnected);
         }
 
         HidppFrame::from_bytes(&buf[..n])

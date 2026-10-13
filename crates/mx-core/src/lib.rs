@@ -17,5 +17,5 @@ pub use features::{
 };
 pub use frame::HidppFrame;
 pub use transport::{Transport, MockTransport};
-pub use device::HidppDevice;
+pub use device::{HidppDevice, DivertGuard};
 

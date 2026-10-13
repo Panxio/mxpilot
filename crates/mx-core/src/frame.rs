@@ -103,11 +103,21 @@ impl HidppFrame {
             if raw.len() < 4 {
                 return Err(HidppError::InvalidLength(raw.len()));
             }
-            return Err(HidppError::ProtocolError {
-                feature_index: raw[2],
-                function_id: raw[1],
-                error_code: raw[3],
-            });
+            if raw.len() >= 5 {
+                // Formato estándar HID++: [0x8F, dev_idx, feature/sub_id, func/address, error_code, ...]
+                return Err(HidppError::ProtocolError {
+                    feature_index: raw[2],
+                    function_id: raw[3],
+                    error_code: raw[4],
+                });
+            } else {
+                // Formato corto legacy de 4 bytes: [0x8F, sub_id, address, error_code]
+                return Err(HidppError::ProtocolError {
+                    feature_index: raw[2],
+                    function_id: raw[1],
+                    error_code: raw[3],
+                });
+            }
         }
 
         if report_id != SHORT_REPORT_ID && report_id != LONG_REPORT_ID {
@@ -201,13 +211,14 @@ mod tests {
 
     #[test]
     fn test_error_report_deserialization() {
-        let err_bytes = [0x8F, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00];
+        // [0x8F, dev_idx, feature_idx, function_id, error_code, ...]
+        let err_bytes = [0x8F, 0xFF, 0x0A, 0x03, 0x02, 0x00, 0x00];
         let res = HidppFrame::from_bytes(&err_bytes);
         assert!(matches!(
             res,
             Err(HidppError::ProtocolError {
-                feature_index: 0x00,
-                function_id: 0x01,
+                feature_index: 0x0A,
+                function_id: 0x03,
                 error_code: 0x02
             })
         ));

@@ -23,6 +23,36 @@ impl<T: Transport> HidppDevice<T> {
         }
     }
 
+    pub fn device_index(&self) -> u8 {
+        self.device_index
+    }
+
+    pub fn set_device_index(&mut self, index: u8) {
+        self.device_index = index;
+    }
+
+    pub fn transport_mut(&mut self) -> &mut T {
+        &mut self.transport
+    }
+
+    /// Descubre y conecta con el dispositivo probando el índice 0xFF (Bluetooth/directo)
+    /// y luego los slots de receptor Unifying/Bolt (0x01..=0x04)
+    pub fn auto_connect(transport: T) -> Result<Self, HidppError> {
+        let mut dev = Self::new(transport, 0xFF);
+        if dev.ping().unwrap_or(false) {
+            return Ok(dev);
+        }
+
+        for slot in 1..=4 {
+            dev.set_device_index(slot);
+            if dev.ping().unwrap_or(false) {
+                return Ok(dev);
+            }
+        }
+
+        Err(HidppError::HandshakeFailed)
+    }
+
     /// Incrementa y retorna el siguiente software ID cíclico (0x01..0x0F)
     fn next_sw_id(&mut self) -> u8 {
         let current = self.software_id;
@@ -143,6 +173,24 @@ impl<T: Transport> HidppDevice<T> {
         Ok(())
     }
 
+    /// Crea un guardián RAII para garantizar la liberación del divert al salir
+    pub fn divert_guard(&mut self, cid: u16) -> Result<DivertGuard<'_, T>, HidppError> {
+        DivertGuard::new(self, cid)
+    }
+
+    /// Restaura todos los CIDs reprogramables reportados por el dispositivo para asegurar un estado limpio
+    pub fn reset_all_diverts(&mut self) -> Result<usize, HidppError> {
+        let keys = self.list_reprogrammable_keys()?;
+        let mut count = 0;
+        for key in keys {
+            if key.can_divert {
+                let _ = self.set_cid_divert(key.control_id, false);
+                count += 1;
+            }
+        }
+        Ok(count)
+    }
+
     /// Lista todas las teclas reprogramables consultando la Feature 0x1B04
     pub fn list_reprogrammable_keys(&mut self) -> Result<Vec<KeyInfo>, HidppError> {
         let f_idx = self.get_feature_index(FEATURE_REPROGRAMMABLE_KEYS)?;
@@ -186,6 +234,55 @@ impl<T: Transport> HidppDevice<T> {
         }
 
         Ok(features)
+    }
+}
+
+/// Guardián RAII para garantizar la liberación del desvío de un botón físico (Zero Dead Buttons)
+pub struct DivertGuard<'a, T: Transport> {
+    device: &'a mut HidppDevice<T>,
+    cid: u16,
+    active: bool,
+}
+
+impl<'a, T: Transport> DivertGuard<'a, T> {
+    pub fn new(device: &'a mut HidppDevice<T>, cid: u16) -> Result<Self, HidppError> {
+        device.set_cid_divert(cid, true)?;
+        Ok(Self {
+            device,
+            cid,
+            active: true,
+        })
+    }
+
+    pub fn cid(&self) -> u16 {
+        self.cid
+    }
+
+    /// Desactiva el divert cooperativamente y consume el guardián
+    pub fn release(mut self) -> Result<(), HidppError> {
+        self.active = false;
+        self.device.set_cid_divert(self.cid, false)
+    }
+
+    /// Desactiva el guardián sin enviar paquete de restauración al dispositivo
+    pub fn defuse(&mut self) {
+        self.active = false;
+    }
+
+    pub fn device_mut(&mut self) -> &mut HidppDevice<T> {
+        self.device
+    }
+
+    pub fn transport_mut(&mut self) -> &mut T {
+        self.device.transport_mut()
+    }
+}
+
+impl<'a, T: Transport> Drop for DivertGuard<'a, T> {
+    fn drop(&mut self) {
+        if self.active {
+            let _ = self.device.set_cid_divert(self.cid, false);
+        }
     }
 }
 
@@ -248,5 +345,30 @@ mod tests {
         assert_eq!(set_req.feature_index, 0x0A);
         assert_eq!(set_req.function_id, 0x03);
         assert_eq!(set_req.params[0..3], [0x00, 0xFD, 0x03]); // CID 0x00FD, divert ON (0x03)
+    }
+
+    #[test]
+    fn test_divert_guard_raii_drop() {
+        let mut mock = MockTransport::new();
+        // 1. Resolver feature 0x1B04 -> index 0x0A (para divert ON)
+        mock.enqueue_response(HidppFrame::long(0xFF, 0x00, 0x00, 0x01, &[0x0A, 0x00, 0x00]));
+        // 2. Respuesta a setCidReporting ON
+        mock.enqueue_response(HidppFrame::long(0xFF, 0x0A, 0x03, 0x02, &[0x00, 0xFD, 0x03, 0x00, 0x00]));
+        // 3. Resolver feature 0x1B04 -> index 0x0A (para divert OFF en Drop)
+        mock.enqueue_response(HidppFrame::long(0xFF, 0x00, 0x00, 0x03, &[0x0A, 0x00, 0x00]));
+        // 4. Respuesta a setCidReporting OFF
+        mock.enqueue_response(HidppFrame::long(0xFF, 0x0A, 0x03, 0x04, &[0x00, 0xFD, 0x02, 0x00, 0x00]));
+
+        let mut dev = HidppDevice::new(mock, 0xFF);
+        {
+            let guard = dev.divert_guard(CID_TOP_BUTTON).expect("Debe crear guard");
+            assert_eq!(guard.cid(), CID_TOP_BUTTON);
+            // El guard sale de scope aquí -> drop ejecuta set_cid_divert(..., false)
+        }
+
+        // Verificar que se enviaron tramas para divert ON (0x03) y luego OFF (0x02)
+        assert!(dev.transport.sent_frames.len() >= 4);
+        let last_frame = dev.transport.sent_frames.last().unwrap();
+        assert_eq!(last_frame.params[0..3], [0x00, 0xFD, 0x02]); // bfield 0x02 = divert OFF
     }
 }

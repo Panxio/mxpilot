@@ -1,0 +1,13 @@
+# Reglas udev para MX Options Linux (prefijo 70-* para evaluarse antes de 73-seat-late.rules)
+# Otorga permisos de acceso seguro al usuario activo de escritorio (sin root / sin sudo)
+# para dispositivos Logitech HIDRAW (USB y Bluetooth) y el emulador uinput.
+
+# 1. Logitech HIDRAW sobre USB (Receptores Unifying / Bolt / Cable directo)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", TAG+="uaccess", MODE="0660"
+
+# 2. Logitech HIDRAW sobre Bluetooth BLE (dispositivos bajo /devices/virtual/misc/uhid/)
+SUBSYSTEM=="hidraw", ENV{HID_ID}=="*:0000046D:*", TAG+="uaccess", MODE="0660"
+SUBSYSTEM=="hidraw", KERNELS=="*:046D:*", TAG+="uaccess", MODE="0660"
+
+# 3. Emulador de teclado y ratón virtual uinput
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", MODE="0660"

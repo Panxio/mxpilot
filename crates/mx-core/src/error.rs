@@ -18,6 +18,9 @@ pub enum HidppError {
     #[error("Tiempo de espera agotado al comunicarse con el dispositivo")]
     Timeout,
 
+    #[error("Dispositivo desconectado o enlace de hardware perdido")]
+    Disconnected,
+
     #[error("Error de E/S: {0}")]
     Io(String),
 
