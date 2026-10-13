@@ -231,3 +231,20 @@ developer, el puente es por ARCHIVOS, no por terminal:
 - Claude Code lee el log, juzga contra el núcleo + este perfil, y redirige.
 - El grading cruzado (un agente juzga al otro) NO reemplaza el arnés externo:
   el arnés sigue siendo el árbitro objetivo (Pilar 5 + Regla de Oro).
+
+
+---
+
+### Gobernanza de Tokens y Delegación a Subagentes
+
+#### 1. Alarma de Contexto y Gestión de Tokens
+- El entorno cuenta con un hook activo globalmente (`~/.gemini/config/hooks.json` -> `~/.gemini/config/hooks/hook-contexto-agy.sh`).
+- **160k tokens:** ALARMA. No iniciar unidades nuevas de código; comenzar el cierre documental actualizando `STATUS.md`.
+- **200k tokens:** AVISO FINAL / TECHO. Guardar cambios, consolidar estado y sugerir al usuario rotar de sesión en un punto natural.
+
+#### 2. Delegación a Subagentes
+- Para tareas independientes o intensivas, utilizar el lanzador `scripts/run-dev.sh` (con `systemd-run` y límite de 2 GB de RAM) hacia los modelos verificados en `docs/SUBAGENTES.md`:
+  - `opencode-go/deepseek-v4.1-flash`: Módulos de Linux, udev, sockets IPC y arquitectura.
+  - `opencode-go/claude-haiku-5-5`: Criterios de aceptación, specs y descomposición en fases.
+  - `gemini-3.8-flash-high` (vía agy): Tareas de soporte y código complementario sin quemar cuota de Claude.
+- **Regla de oro de auditoría:** Nunca aceptar el autoinforme del subagente. Árbitro objetivo (`cargo test`, `evtest`, `clippy`), revisión de `diff` y evidencia antes de integrar.
