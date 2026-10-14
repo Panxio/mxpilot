@@ -96,88 +96,98 @@
 
 <main class="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden font-sans">
   <!-- Barra de Título / Encabezado Superior -->
-  <header class="flex items-center justify-between px-5 py-3 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur">
-    <!-- Logotipo y Nombre del Dispositivo -->
-    <div class="flex items-center space-x-3">
-      <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-900 to-emerald-800 shadow-md shadow-emerald-950/40 border border-emerald-500/40 text-white font-bold text-sm">
-        MX
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur px-5 py-3">
+    <div class="max-w-[1100px] mx-auto w-full flex items-center justify-between">
+      <!-- Logotipo y Nombre del Dispositivo -->
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-900 to-emerald-800 shadow-md shadow-emerald-950/40 border border-emerald-500/40 text-white font-bold text-sm">
+          MX
+        </div>
+        <div>
+          <h1 class="text-sm font-semibold tracking-tight text-white flex items-center space-x-2">
+            <span>{$statusData.device_name || 'Logitech MX Vertical'}</span>
+            {#if $uiState === 'Connected'}
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+            {:else if $uiState === 'DeviceDisconnected'}
+              <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
+            {:else}
+              <span class="inline-block w-2 h-2 rounded-full bg-rose-500"></span>
+            {/if}
+          </h1>
+          <p class="text-[10px] text-slate-400 font-mono tracking-wide">
+            {$statusData.device_path || 'Linux Native Driver'}
+          </p>
+        </div>
       </div>
-      <div>
-        <h1 class="text-sm font-semibold tracking-tight text-white flex items-center space-x-2">
-          <span>{$statusData.device_name || 'Logitech MX Vertical'}</span>
-          {#if $uiState === 'Connected'}
-            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
-          {:else if $uiState === 'DeviceDisconnected'}
-            <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
-          {:else}
-            <span class="inline-block w-2 h-2 rounded-full bg-rose-500"></span>
-          {/if}
-        </h1>
-        <p class="text-[10px] text-slate-400 font-mono tracking-wide">
-          {$statusData.device_path || 'Linux Native Driver'}
-        </p>
+
+      <!-- Controles de la Barra Superior -->
+      <div class="flex items-center space-x-2.5">
+        <BatteryBadge />
+
+        <button
+          type="button"
+          on:click={openTelemetry}
+          title="Ver diagnóstico y telemetría"
+          class="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-800 hover:bg-slate-700/80 text-slate-300 border border-slate-700 transition-colors"
+        >
+          <span class="text-[12px]">🛠</span>
+          <span>Diagnóstico</span>
+        </button>
       </div>
-    </div>
-
-    <!-- Controles de la Barra Superior -->
-    <div class="flex items-center space-x-2.5">
-      <BatteryBadge />
-
-      <button
-        type="button"
-        on:click={openTelemetry}
-        title="Ver diagnóstico y telemetría"
-        class="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-800 hover:bg-slate-700/80 text-slate-300 border border-slate-700 transition-colors"
-      >
-        <span class="text-[12px]">🛠</span>
-        <span>Diagnóstico</span>
-      </button>
     </div>
   </header>
 
   <!-- Banner de Estado de la Máquina Honesta de 4 Vías -->
   {#if $uiState === 'DaemonDown'}
-    <div class="flex items-center justify-between px-5 py-2.5 bg-rose-950/40 border-b border-rose-800/60 text-xs text-rose-300">
-      <div class="flex items-center space-x-2">
-        <span class="text-rose-400 font-bold">⚠</span>
-        <span>mx-daemon no está en ejecución. Los atajos personalizados están inactivos.</span>
+    <div class="px-5 py-2.5 bg-rose-950/40 border-b border-rose-800/60 text-xs text-rose-300">
+      <div class="max-w-[1100px] mx-auto w-full flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-rose-400 font-bold">⚠</span>
+          <span>mx-daemon no está en ejecución. Los atajos personalizados están inactivos.</span>
+        </div>
+        <button
+          type="button"
+          disabled={isStartingService}
+          on:click={handleStartService}
+          class="px-3 py-1 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition-colors disabled:opacity-50"
+        >
+          {isStartingService ? 'Iniciando...' : 'Iniciar Servicio'}
+        </button>
       </div>
-      <button
-        type="button"
-        disabled={isStartingService}
-        on:click={handleStartService}
-        class="px-3 py-1 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition-colors disabled:opacity-50"
-      >
-        {isStartingService ? 'Iniciando...' : 'Iniciar Servicio'}
-      </button>
     </div>
   {:else if $uiState === 'DeviceDisconnected'}
-    <div class="flex items-center justify-between px-5 py-2 bg-amber-950/40 border-b border-amber-800/60 text-xs text-amber-300">
-      <div class="flex items-center space-x-2">
-        <span class="text-amber-400">ℹ</span>
-        <span>Ratón desconectado o en reposo Bluetooth. Configuración guardada en perfil.</span>
+    <div class="px-5 py-2 bg-amber-950/40 border-b border-amber-800/60 text-xs text-amber-300">
+      <div class="max-w-[1100px] mx-auto w-full flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-amber-400">ℹ</span>
+          <span>Ratón desconectado o en reposo Bluetooth. Configuración guardada en perfil.</span>
+        </div>
+        <span class="text-[10px] font-mono text-amber-400/80">Reconexión automática activa</span>
       </div>
-      <span class="text-[10px] font-mono text-amber-400/80">Reconexión automática activa</span>
     </div>
   {/if}
 
   {#if $errorMessage && $uiState !== 'DaemonDown'}
-    <div class="px-5 py-1.5 bg-rose-950/30 border-b border-rose-800/40 text-[11px] text-rose-300 flex items-center justify-between">
-      <span>{$errorMessage}</span>
-      <button type="button" on:click={() => errorMessage.set(null)} class="text-rose-400 hover:text-rose-200">✕</button>
+    <div class="px-5 py-1.5 bg-rose-950/30 border-b border-rose-800/40 text-[11px] text-rose-300">
+      <div class="max-w-[1100px] mx-auto w-full flex items-center justify-between">
+        <span>{$errorMessage}</span>
+        <button type="button" on:click={() => errorMessage.set(null)} class="text-rose-400 hover:text-rose-200">✕</button>
+      </div>
     </div>
   {/if}
 
-  <!-- Contenido Principal: Panel Dividido Lado a Lado -->
-  <div class="flex-1 grid grid-cols-2 gap-5 p-5 min-h-0">
-    <!-- Columna Izquierda: Visualizador Blueprint SVG -->
-    <div class="flex flex-col h-full min-h-0">
-      <MouseViewer />
-    </div>
+  <!-- Contenido Principal: Anclado Superior (Top-Pinning) con Flujo Vertical Flexible -->
+  <div class="flex-1 min-h-0 w-full flex items-start justify-center px-5 pt-6 pb-5 overflow-hidden">
+    <div class="grid grid-cols-2 gap-5 w-full max-w-[1100px] h-full min-h-0 max-h-[720px]">
+      <!-- Columna Izquierda: Visualizador Blueprint SVG -->
+      <div class="flex flex-col h-full min-h-0">
+        <MouseViewer />
+      </div>
 
-    <!-- Columna Derecha: Selector de Acciones -->
-    <div class="flex flex-col h-full min-h-0">
-      <ActionPicker />
+      <!-- Columna Derecha: Selector de Acciones -->
+      <div class="flex flex-col h-full min-h-0">
+        <ActionPicker />
+      </div>
     </div>
   </div>
 

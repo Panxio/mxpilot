@@ -6,17 +6,28 @@
 > Creado: 2026-10-13
 
 > ### 📌 RESUMEN EJECUTIVO DE RELEVO RÁPIDO (LEER AL INICIAR SESIÓN)
-> - **Última Sesión Cerrada:** Sesión 10 (Fase 4: Auditoría de Cierre Colegiada, Correcciones de ACL/Tray/Build y Cierre Formal).
+> - **Última Sesión Cerrada:** Sesión 13: *Tanda Colegiada Multi-Agente de Ergonomía Visual, Diagnóstico Gestalt de Fullscreen, Implementación de Top-Pinning y Cierre Formal de Fase 4 (GUI Desktop)*.
+> - **Estado Global del Proyecto:** Fases 0, 1, 2, 3 y 4 **APROBADAS Y VERIFICADAS EN HARDWARE REAL**.
 > - **Fases Aprobadas:**
->   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-probe`) — Kill-gate superado.
+>   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-probe`) — 29 features volcadas, kill-gate superado.
 >   - ✅ **Fase 1:** Divert de Botón Superior & Inyección Virtual (`mx-uinput`, `mx-cli`) — RAII y Down/Up verificado.
 >   - ✅ **Fase 2:** Reglas `udev` (`70-mx-options.rules`) — Permisos de usuario sin `sudo`.
->   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS 3.3 MB (<15 MB), parada limpia <0.1 s, fail-safe Zero Stuck Keys verificado.
->   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — Backend Rust asíncrono Zero Hang UI, tray icon dinámico con batería/tooltip, frontend Svelte 5 + Tailwind v4 con blueprint vectorial Gemini 4, capabilities Tauri v2 ACL para eventos, 36/36 tests pasando, 0 clippy warnings, binario 11 MB stripped.
-> - **Fase Siguiente:** **Fase 5: Empaquetado (.deb) y Distribución Limpia**.
-> - **Acción Inmediata al Retomar:**
->   1. Elaborar la especificación técnica `specs/F5-packaging-deb.md` (estructura del paquete `.deb`, dependencias de runtime WebKit/AppIndicator, `systemd --user` service unit, udev rules y `.desktop` launcher).
->   2. Despachar tanda de revisión inicial de Fase 5 con la plantilla limpia `scripts/templates/template-tanda.sh`.
+>   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS 784 KB (<15 MB), parada limpia <0.1 s, fail-safe Zero Stuck Keys verificado.
+>   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — **APROBACIÓN TOTAL CON VISTO BUENO DEL USUARIO:**
+>     - Soporte multi-CID dinámico (`0x00FD` Superior, `0x0056` Adelante, `0x0053` Atrás, `0x0052` Clic Rueda).
+>     - Función de Fábrica (`SystemDefault`) para des-desviar en hardware y restaurar navegación nativa en navegador.
+>     - Presets de navegación de Espacios de Trabajo virtuales en GNOME (Ctrl + Alt + → / ←).
+>     - Iconografía oficial: Opción 2 (Squircle Esmeralda `#059669` con monograma MX blanco en 8-bit RGBA sin artefactos en Ayatana).
+>     - Layout perfeccionado por comité colegiado (Haiku, DeepSeek, Luna, Muse): **Top-Pinning a 24 px** bajo la cabecera, sin abismo en Fullscreen y preservando el 10/10 en ventana por defecto (`960×620`).
+>     - Suite de pruebas: 37/37 tests Rust y 13/13 tests JS pasando, 0 clippy warnings, binario release de 11 MB.
+> - **Fase Siguiente Inmediata:** **Fase 5: Empaquetado (.deb) y Distribución Limpia**.
+> - **Acción Inmediata al Retomar en la Próxima Sesión:**
+>   1. Elaborar la especificación técnica `specs/F5-packaging-deb.md` detallando:
+>      - Estructura del paquete `.deb` (`/usr/bin/mx-daemon`, `/usr/bin/mx-gui`, `/usr/bin/mx-diag`, `/etc/udev/rules.d/70-mx-options.rules`, `/usr/lib/systemd/user/mx-options.service`, `/usr/share/applications/mx-options.desktop`, `/usr/share/icons/hicolor/...`).
+>      - Dependencias de runtime para Debian/Ubuntu: `libayatana-appindicator3-1`, `libwebkit2gtk-4.1-0`, `libssl3`.
+>      - Scripts de post-instalación (`postinst`: recarga udev, `systemctl --user daemon-reload`, actualización de iconos) y post-remoción (`postrm`).
+>   2. Despachar tanda de revisión inicial de Fase 5 a los 4 subagentes (`haiku`, `deepseek`, `muse`, `luna`) usando la plantilla canónica `scripts/templates/template-tanda.sh`.
+>   3. Construir el paquete `.deb` reproducible mediante `cargo-deb` o herramientas nativas Debian.
 
 ---
 
@@ -116,8 +127,8 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
 | **F1: Divert + `uinput` (`mx-cli`)** | Enviar paquete de diversion al CID `0x00FD`; emitir pulsación virtual vía `/dev/uinput`. | **Gemini 3.8 Flash High** + `opencode-go/claude-haiku-5-5` (specs & arnés TDD) | **APROBADO:** Dispositivo virtual `MX Options Virtual Device` activo, captura de eventos 0x1B04, emisión de Super/Meta y restauración RAII al salir. |
 | **F2: Permisos `udev`** | Regla en `/etc/udev/rules.d/` con `TAG+="uaccess"` y `GROUP="plugdev"` para `046d` y `uinput`. | `opencode-go/deepseek-v4.1-flash` (revisión de reglas de seguridad Linux) | **APROBADO:** Ejecución de `mx-probe` y `mx-cli` como usuario normal sin `sudo`. |
 | **F3: Daemon `systemd` & IPC** | Daemon en segundo plano con reconexión automática tras suspensión; socket Unix seguro. | **Gemini 3.8 Flash High** + 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) | **APROBADO:** 28 tests pasando, clippy 0 warnings, RSS en hardware 3.3 MB (<15 MB), parada limpia <0.1 s, IPC seguro SO_PEERCRED, auditoría colegiada cerrada. |
-| **F4: GUI Tauri v2** | Interfaz en Svelte + Tailwind con System Tray, selector de atajos y estado de batería. | **Gemini 3.8 Flash High** | RAM total < 80 MB; bundle < 15 MB; control reactivo del daemon vía socket. |
-| **F5: Empaquetado & Convivencia** | Creación de `.deb`; detector de conflictos con `solaar` o `logid`. | **Gemini 3.8 Flash High** + `opencode-go/muse-spark-1.3` (telemetría / `mx-diag`) | Instalación limpia en Ubuntu/Debian; detección y aviso sin duplicar divert. |
+| **F4: GUI Tauri v2** | Interfaz en Svelte + Tailwind con System Tray, selector de atajos y estado de batería. | **Gemini 3.8 Flash High** + 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) | **APROBADO CON VISTO BUENO:** Multi-CID divert, restauración nativa `SystemDefault`, navegación de escritorios, icono esmeralda Opción 2, layout con Top-Pinning a 24 px en Fullscreen validado visualmente por el usuario. 37 tests Rust, 13 tests JS, 0 clippy warnings. |
+| **F5: Empaquetado & Convivencia** | Creación de `.deb`; detector de conflictos con `solaar` o `logid`. | **Gemini 3.8 Flash High** + `opencode-go/muse-spark-1.3-contributor` (telemetría / `mx-diag`) | Instalación limpia en Ubuntu/Debian; detección y aviso sin duplicar divert. |
 
 ---
 
@@ -377,6 +388,70 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
   - `cargo build --release -p mx-gui`: **Compilado OK en 25.7s (14 MB)** ✅
   - Instalado en `~/.local/bin/mx-gui` y desplegado en vivo para verificación del usuario.
 - **Estado:** ✅ **E2E Visual y Desktop Integration verificado y listo para Fase 5**.
+
+---
+
+### Sesión 12 (2026-10-14) — Multi-CID Divert, Restauración Nativa, Iconografía S8 Oficial y Espacios de Trabajo
+- **Desvío Multi-CID y Des-Desvío Nativo en Firmware (`mx-daemon`):**
+  - Corregido defecto donde solo el CID `0x00FD` (botón superior) permitía reconfiguración.
+  - Implementado `active_diverted_cids: HashSet<u16>` dinámico en `workers.rs` para todos los CIDs de `VALID_CIDS` (`0x00FD`, `0x0056`, `0x0053`, `0x0052`).
+  - Agregado payload `SystemDefault` ("Función de Fábrica") en el protocolo IPC. Al seleccionarlo, `mx-daemon` envía `set_cid_divert(cid, false)` al hardware y elimina el desvío. El ratón vuelve a emitir eventos nativos del kernel (`BTN_SIDE`, `BTN_EXTRA`, `BTN_MIDDLE`), restaurando navegación web Atrás/Adelante en navegadores.
+- **Identidad Visual Oficial: Opción 2 (Esmeralda Vibrante):**
+  - El usuario evaluó dos propuestas y aprobó formalmente la **Opción 2**: squircle verde `#059669` (contraste 5.2:1 frente a dock `#1e1e1e`), monograma MX `#ffffff` plano con 20px de separación óptica y acento `#a7f3d0`.
+  - Generado conjunto completo de iconos en 8-bit RGBA (`png32:`) para erradicar el bug de 64bpp en `libayatana-appindicator` (16x16 a 512x512, `icon.png`, `icon.ico`, `mx-options.svg`).
+  - Actualizada caché del sistema con `gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor`.
+- **Nueva Acción: Navegación de Espacios de Trabajo (Ctrl + Alt + Flechas):**
+  - Registrados `KEY_RIGHT`, `KEY_LEFT`, `KEY_UP`, `KEY_DOWN`, `KEY_PAGEUP`, `KEY_PAGEDOWN` en `VirtualDevice` (`mx-uinput`) y en `parse_key_code` (`mx-daemon`).
+  - Incorporados presets `Espacio de Trabajo: Derecha (Ctrl + Alt + →)` y `Espacio de Trabajo: Izquierda (Ctrl + Alt + ←)` en `ActionPicker.svelte`.
+  - Ahora cualquier botón (como el clic de la rueda `0x0052` o laterales) puede conmutar escritorios virtuales en GNOME.
+- **Documento de Lecciones Aprendidas de Iconografía y Linux Desktop:**
+  - Creado [`docs/LECCIONES_APRENDIDAS_ICONOGRAFIA.md`](docs/LECCIONES_APRENDIDAS_ICONOGRAFIA.md) detallando las 7 causas raíces y soluciones de contraste, submuestreo, profundidad PNG de Ayatana, caché XDG, `StartupWMClass`, desvío HID++ 2.0 y comparación semántica en Svelte.
+- **Equilibrio Ergonómico, Centrado en Pantalla Completa y Filtros por Categoría (Opción 1):**
+  - Resuelto el estiramiento y el vacío inferior en pantalla completa mediante cota máxima `max-h-[620px] my-auto items-center` en el grid de `App.svelte`: en monitores grandes el centro de control flota equilibrado en el centro sin fondos oscuros muertos abajo.
+  - En `MouseViewer.svelte`:
+    - Encabezado simétrico con la columna derecha (`border-b border-slate-800/60 pb-3 mb-2`), alineando las líneas divisorias de ambas columnas al mismo píxel.
+    - Blueprint SVG elevado inmediatamente debajo del encabezado (sin `flex-1 my-auto` que lo empujaba al centro vertical vacío).
+    - Botonera rápida de 4 botones integrada directamente bajo la base del ratón (`max-w-[360px] mt-2` sin `mt-auto`), eliminando el salto al fondo de la pantalla y agrupando los controles arriba de forma análoga a la lista de acciones de la derecha.
+  - En `ActionPicker.svelte`:
+    - Incorporado selector segmentado de categorías estilo Libadwaita / macOS: `[Todas]` (10), `[Navegación]` (4), `[Productividad]` (4), `[Hardware]` (2).
+    - Permite al usuario desahogar la columna derecha con un solo clic, visualizando únicamente 2 o 4 acciones relevantes sin la sensación de una lista saturada.
+    - Ajustado el padding vertical de las tarjetas a `py-2 px-3` con espaciado de lista `space-y-1.5`.
+- **Verificación de Árbitros Objetivos:**
+  - `cargo test --workspace`: **37 tests pasando (0 fallos)** ✅
+  - `npm --prefix crates/mx-gui/ui test`: **13/13 tests pasando en verde** ✅
+  - `cargo clippy --workspace --all-targets -- -D warnings`: **0 warnings** ✅
+  - `npm --prefix crates/mx-gui/ui run build`: **0 errores** ✅
+  - `cargo build --release -p mx-daemon && cargo build --release -p mx-gui`: **Compilado OK** ✅
+  - Binarios release instalados en `~/.local/bin/`, servicio systemd reiniciado (PID 3052120, 784 KB RSS) y `mx-gui` lanzado en segundo plano.
+- **Estado:** ✅ **Todas las solicitudes del usuario completadas con rigor y listas para validación en vivo**.
+
+---
+
+### Sesión 13 (2026-10-14) — Tanda Colegiada Multi-Agente de Ergonomía Visual, Diagnóstico Gestalt de Fullscreen, Implementación de Top-Pinning y Cierre Formal de Fase 4
+- **Tanda Colegiada Multi-Agente (`review_f4_layout`):**
+  - Despachada tanda con los 4 subagentes especializados (`haiku`, `deepseek`, `muse`, `luna`) para auditar la desconexión visual y el espaciado en Fullscreen.
+  - Aplicadas todas las salvaguardas anti-error: slug canónico `opencode-go/muse-spark-1.3-contributor`, redirección `< /dev/null`, memoria `MemoryMax=2G`, captura atómica `local code=0; ... || code=$?` y monitor por eventos sin bucle visual.
+  - Los 4 agentes completaron con éxito (0 fallos):
+    - `haiku`: 73s, 10.5 KB (Diagnóstico Gestalt: violación de Ley de Proximidad y Región Común).
+    - `deepseek`: 172s, 17.8 KB (Análisis matemático de la brecha `(H - 58 - 40 - 620)/2` y diff de código).
+    - `luna`: 116s, 14.8 KB (Desktop HIG: GNOME Libadwaita `AdwClamp`, macOS System Settings, Windows Fluent y accesibilidad de redimensionado).
+    - `muse`: 33s, 12.2 KB (Benchmarking de suites de hardware: Logitech Options+, Piper GTK, Solaar, Razer Synapse).
+  - Reportes completos consolidados en [`.superpowers/review_f4_layout/reports/`](.superpowers/review_f4_layout/reports/) y resumen ejecutivo en [`00_RESUMEN_EJECUTIVO_COLEGIADO.md`](.superpowers/review_f4_layout/reports/00_RESUMEN_EJECUTIVO_COLEGIADO.md).
+- **Consenso Unánime e Implementación en Producción:**
+  - **Anclaje Superior (Top-Pinning):** Modificado `crates/mx-gui/ui/src/App.svelte` (líneas 180-181) para reemplazar `items-center` por `items-start`, eliminar `my-auto`, establecer un inset superior constante de 24 px (`px-5 pt-6 pb-5`) y ampliar el tope elástico a `max-h-[720px]`.
+  - **Cero regresión:** En la ventana estándar de 960×620 la presentación es pixel-idéntica al 10/10 original (el alto disponible es de ~522 px, menor que 720 px).
+  - **En Fullscreen (1920×1080):** El abismo vacío de 200 px queda erradicado. La cabecera y las tarjetas se mantienen unidas a una distancia armoniosa de 24 px (como en Logitech Options+ y Piper), dejando el aire sobrante de forma limpia al pie y permitiendo que la lista de acciones muestre los 10 comandos sin scroll.
+- **Verificación de Árbitros Objetivos:**
+  - `cargo test --workspace`: **37 tests pasando (0 fallos)** ✅
+  - `npm --prefix crates/mx-gui/ui test`: **13/13 tests pasando en verde** ✅
+  - `cargo clippy --workspace --all-targets -- -D warnings`: **0 warnings** ✅
+  - `npm --prefix crates/mx-gui/ui run build`: **0 errores (dist/index.html 0.49 kB, CSS 35.59 kB, JS 74.12 kB)** ✅
+  - `cargo build --release -p mx-gui`: **Compilado OK en 17.69s** ✅
+  - Binario release instalado en `~/.local/bin/mx-gui` (sha256 `117b4a55...`), instancia previa finalizada limpiamente y nueva instancia ejecutándose en vivo (PID 1433).
+- **Aprobación del Usuario (Visto Bueno):**
+  - El usuario evaluó en vivo la aplicación en pantalla completa (captura `media_1792021874780_8679bd0f.png`): *"está super está perfecto. Y que ahora sí tiene esa vista más natural cuando se pone full screen, por lo menos no es molesto a la armonía de la aplicación. Y el despliegue está también. Bien, los despliegues por defecto tienen un tamaño preciso. Me gusta. ¿Está aprobada esta idea? ¿Visto bueno?"*.
+- **Estado:** ✅ **Fase 4 (GUI Desktop Tauri v2) formalmente aprobada con visto bueno del usuario. Todo el repositorio y la suite de pruebas quedan en verde para iniciar la Fase 5 (Empaquetado .deb) en una nueva sesión limpia.**
+
 
 
 

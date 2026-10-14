@@ -199,3 +199,60 @@ for item in "${AGENTES[@]}"; do
   printf "%-10s %-25s %-15s %-10s %-12s\n" "$alias" "${model:0:24}" "$status" "$elapsed" "$size"
 done
 echo "=============================================================================="
+
+echo ""
+echo "Extrayendo reportes individuales en $REPORTS_DIR..."
+python3 - "$REPO" "$SALIDA_DIR" << 'PYEOF'
+import sys, os, json
+
+repo = sys.argv[1]
+audit_dir = sys.argv[2]
+logs_dir = os.path.join(audit_dir, "logs")
+reports_dir = os.path.join(audit_dir, "reports")
+
+agentes = ["deepseek", "haiku", "muse", "luna"]
+
+for ag in agentes:
+    json_path = os.path.join(logs_dir, f"audit-{ag}.json")
+    report_path = os.path.join(reports_dir, f"{ag}.md")
+    
+    if not os.path.exists(json_path):
+        continue
+        
+    extracted_text = []
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                    if isinstance(obj, dict):
+                        if "part" in obj and isinstance(obj["part"], dict) and "text" in obj["part"]:
+                            extracted_text.append(obj["part"]["text"])
+                        elif "type" in obj and obj.get("type") == "text" and "content" in obj:
+                            extracted_text.append(obj["content"])
+                        elif "content" in obj and isinstance(obj["content"], str):
+                            extracted_text.append(obj["content"])
+                        elif "text" in obj:
+                            extracted_text.append(obj["text"])
+                except Exception:
+                    continue
+    except Exception as e:
+        print(f"[!] Error leyendo {json_path}: {e}")
+        
+    full_content = "\n\n".join(extracted_text).strip()
+    if full_content:
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write(full_content)
+        print(f"[+] Reporte extraído para {ag}: {len(full_content)} caracteres -> {report_path}")
+    else:
+        err_path = os.path.join(logs_dir, f"audit-{ag}.err")
+        if os.path.exists(err_path) and os.path.getsize(err_path) > 0:
+            with open(err_path, 'r', encoding='utf-8') as ef, open(report_path, 'w', encoding='utf-8') as rf:
+                rf.write(f"# Error en ejecución de {ag}\n\n```\n" + ef.read() + "\n```")
+            print(f"[!] Reportado error para {ag} desde .err")
+
+print("Extracción completada.")
+PYEOF

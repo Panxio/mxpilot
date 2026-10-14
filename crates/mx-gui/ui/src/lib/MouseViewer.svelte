@@ -30,21 +30,28 @@
   }
 </script>
 
-<div class="relative flex flex-col items-center justify-center p-4 bg-slate-900/40 rounded-2xl border border-slate-800/80 shadow-inner backdrop-blur-sm">
-  <!-- Badge de modelo y estado sobre el blueprint -->
-  <div class="absolute top-3 left-4 flex items-center space-x-2 text-xs font-mono tracking-wider text-slate-400">
-    <span class="w-2 h-2 rounded-full {$uiState === 'Connected' ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-amber-500'}"></span>
-    <span>MX VERTICAL 57° BLUEPRINT</span>
+<div class="relative flex flex-col items-center p-4 bg-slate-900/40 rounded-2xl border border-slate-800/80 shadow-inner backdrop-blur-sm h-full min-h-0 overflow-y-auto">
+  <!-- Encabezado simétrico con la columna derecha -->
+  <div class="w-full flex items-center justify-between pb-3 border-b border-slate-800/60 mb-2 flex-shrink-0">
+    <div class="flex items-center space-x-2">
+      <span class="w-2 h-2 rounded-full {$uiState === 'Connected' ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-amber-500'}"></span>
+      <h2 class="text-sm font-semibold text-white tracking-wide">
+        MX Vertical <span class="text-xs font-normal text-slate-400 font-mono">(57° Ergo)</span>
+      </h2>
+    </div>
+    {#if $uiState !== 'Connected'}
+      <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 border border-amber-500/30 text-amber-400">
+        {$uiState === 'DaemonDown' ? 'Servicio Inactivo' : 'Desconectado'}
+      </span>
+    {:else}
+      <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800/90 border border-slate-700/80 text-slate-400 font-mono">
+        Blueprint Interactivo
+      </span>
+    {/if}
   </div>
 
-  {#if $uiState !== 'Connected'}
-    <div class="absolute top-3 right-4 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 border border-amber-500/30 text-amber-400">
-      {$uiState === 'DaemonDown' ? 'Servicio Inactivo' : 'Dispositivo Desconectado'}
-    </div>
-  {/if}
-
-  <!-- Contenedor del SVG Blueprint con escala responsiva -->
-  <div class="w-full max-w-[420px] aspect-[360/320] my-2 transition-all duration-300 {$uiState !== 'Connected' ? 'opacity-40 grayscale-[40%]' : ''}">
+  <!-- Contenedor del SVG Blueprint levantado y proporcionado -->
+  <div class="w-full max-w-[360px] aspect-[360/300] my-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 {$uiState !== 'Connected' ? 'opacity-40 grayscale-[40%]' : ''}">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" width="100%" height="100%" class="overflow-visible select-none">
       <defs>
         <!-- Gradiente para el chasis principal oscuro -->
@@ -250,23 +257,23 @@
     </svg>
   </div>
 
-  <!-- Fila de botones para selección rápida con tooltip/etiqueta -->
-  <div class="grid grid-cols-2 gap-2 w-full mt-1">
+  <!-- Fila de botones para selección rápida directamente bajo el blueprint -->
+  <div class="grid grid-cols-2 gap-2 w-full max-w-[360px] mt-2 flex-shrink-0">
     {#each BUTTON_DEFINITIONS as btn}
       {@const actName = getButtonActionName(btn.cid, $statusData.mapping)}
       {@const isCustom = actName !== 'Por defecto del sistema'}
       <button
         type="button"
         on:click={() => selectButton(btn.cid)}
-        class="flex flex-col text-left px-3 py-2 rounded-xl transition-all duration-150 border text-xs
+        class="flex flex-col text-left px-3 py-1.5 rounded-xl transition-all duration-150 border text-xs
           {$selectedCid === btn.cid 
-            ? 'bg-indigo-600/20 border-indigo-500/60 shadow-sm shadow-indigo-500/20 text-white' 
+            ? 'bg-indigo-600/25 border-indigo-500/70 shadow-sm shadow-indigo-500/20 text-white ring-1 ring-indigo-500/40' 
             : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/70 text-slate-300'}"
       >
         <div class="flex items-center justify-between w-full">
           <span class="font-medium truncate">{btn.name}</span>
           {#if isCustom}
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50 flex-shrink-0 ml-1"></span>
           {/if}
         </div>
         <span class="text-[11px] {isCustom ? 'text-emerald-400' : 'text-slate-400'} truncate mt-0.5">

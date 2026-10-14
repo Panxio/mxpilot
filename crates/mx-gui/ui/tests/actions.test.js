@@ -119,4 +119,12 @@ const b = { type: 'KeyCombo', modifiers: ['ALT', 'CTRL'], key: 'KEY_TAB' };
 assert.strictEqual(isActionEqual(a, b), isActionEqual(b, a));
 console.log('✓ Test 12: Simetría equal(a, b) === equal(b, a) verificada');
 
-console.log('--- TODOS LOS 12 TESTS DE ACTIONS.JS PASARON EN VERDE ---');
+// Test 13: Workspace navigation (derecha e izquierda)
+const wsRightA = { type: 'KeyCombo', modifiers: ['KEY_LEFTCTRL', 'KEY_LEFTALT'], key: 'KEY_RIGHT' };
+const wsRightB = { type: 'KeyCombo', modifiers: ['ALT', 'CTRL'], key: 'RIGHT' };
+const wsLeft = { type: 'KeyCombo', modifiers: ['KEY_LEFTCTRL', 'KEY_LEFTALT'], key: 'KEY_LEFT' };
+assert.strictEqual(isActionEqual(wsRightA, wsRightB), true, 'Test 13a falló');
+assert.strictEqual(isActionEqual(wsRightA, wsLeft), false, 'Test 13b falló');
+console.log('✓ Test 13: Acciones de Espacio de Trabajo (Derecha / Izquierda) comparadas e igualadas canónicamente');
+
+console.log('--- TODOS LOS 13 TESTS DE ACTIONS.JS PASARON EN VERDE ---');

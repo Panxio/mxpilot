@@ -31,6 +31,12 @@ impl VirtualInput {
         keys.insert(KeyCode::KEY_SPACE);
         keys.insert(KeyCode::KEY_BACKSPACE);
         keys.insert(KeyCode::KEY_DELETE);
+        keys.insert(KeyCode::KEY_RIGHT);
+        keys.insert(KeyCode::KEY_LEFT);
+        keys.insert(KeyCode::KEY_UP);
+        keys.insert(KeyCode::KEY_DOWN);
+        keys.insert(KeyCode::KEY_PAGEUP);
+        keys.insert(KeyCode::KEY_PAGEDOWN);
 
         // Teclas alfanuméricas comunes
         keys.insert(KeyCode::KEY_C);

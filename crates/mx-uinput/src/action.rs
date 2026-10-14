@@ -44,4 +44,20 @@ impl Action {
             key: KeyCode::KEY_TAB,
         }
     }
+
+    /// Crea una acción Espacio de Trabajo a la Derecha (Ctrl + Alt + Flecha Derecha)
+    pub fn workspace_right() -> Self {
+        Self::KeyCombo {
+            modifiers: vec![KeyCode::KEY_LEFTCTRL, KeyCode::KEY_LEFTALT],
+            key: KeyCode::KEY_RIGHT,
+        }
+    }
+
+    /// Crea una acción Espacio de Trabajo a la Izquierda (Ctrl + Alt + Flecha Izquierda)
+    pub fn workspace_left() -> Self {
+        Self::KeyCombo {
+            modifiers: vec![KeyCode::KEY_LEFTCTRL, KeyCode::KEY_LEFTALT],
+            key: KeyCode::KEY_LEFT,
+        }
+    }
 }

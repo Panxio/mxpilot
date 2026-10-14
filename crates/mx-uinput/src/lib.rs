@@ -21,5 +21,21 @@ mod tests {
         } else {
             panic!("Expected KeyCombo for copy");
         }
+
+        assert_eq!(
+            Action::workspace_right(),
+            Action::KeyCombo {
+                modifiers: vec![KeyCode::KEY_LEFTCTRL, KeyCode::KEY_LEFTALT],
+                key: KeyCode::KEY_RIGHT,
+            }
+        );
+
+        assert_eq!(
+            Action::workspace_left(),
+            Action::KeyCombo {
+                modifiers: vec![KeyCode::KEY_LEFTCTRL, KeyCode::KEY_LEFTALT],
+                key: KeyCode::KEY_LEFT,
+            }
+        );
     }
 }

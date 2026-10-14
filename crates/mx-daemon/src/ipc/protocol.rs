@@ -98,6 +98,12 @@ pub fn parse_key_code(s: &str) -> Result<KeyCode, String> {
         "KEY_ESC" => Ok(KeyCode::KEY_ESC),
         "KEY_SPACE" => Ok(KeyCode::KEY_SPACE),
         "KEY_BACKSPACE" => Ok(KeyCode::KEY_BACKSPACE),
+        "KEY_RIGHT" | "RIGHT" => Ok(KeyCode::KEY_RIGHT),
+        "KEY_LEFT" | "LEFT" => Ok(KeyCode::KEY_LEFT),
+        "KEY_UP" | "UP" => Ok(KeyCode::KEY_UP),
+        "KEY_DOWN" | "DOWN" => Ok(KeyCode::KEY_DOWN),
+        "KEY_PAGEUP" | "PAGEUP" | "PAGE_UP" => Ok(KeyCode::KEY_PAGEUP),
+        "KEY_PAGEDOWN" | "PAGEDOWN" | "PAGE_DOWN" => Ok(KeyCode::KEY_PAGEDOWN),
         "KEY_C" => Ok(KeyCode::KEY_C),
         "KEY_V" => Ok(KeyCode::KEY_V),
         "KEY_X" => Ok(KeyCode::KEY_X),
@@ -286,6 +292,26 @@ mod tests {
             assert_eq!(cid, 253);
             let act = action.to_action().expect("Debe convertir a Action");
             assert_eq!(act, Action::SingleKey(KeyCode::KEY_LEFTMETA));
+        } else {
+            panic!("Expected SetAction");
+        }
+    }
+
+    #[test]
+    fn test_parse_set_action_workspace_navigation() {
+        let json = r#"{"id":2,"cmd":"set_action","cid":82,"action":{"type":"KeyCombo","modifiers":["KEY_LEFTCTRL","KEY_LEFTALT"],"key":"KEY_RIGHT"}}"#;
+        let req = parse_request(json).expect("Debe parsear set_action para workspace");
+        assert_eq!(req.id, Some(2));
+        if let IpcCommand::SetAction { cid, action } = req.command {
+            assert_eq!(cid, 82); // Middle click
+            let act = action.to_action().expect("Debe convertir a Action");
+            assert_eq!(
+                act,
+                Action::KeyCombo {
+                    modifiers: vec![KeyCode::KEY_LEFTCTRL, KeyCode::KEY_LEFTALT],
+                    key: KeyCode::KEY_RIGHT,
+                }
+            );
         } else {
             panic!("Expected SetAction");
         }
