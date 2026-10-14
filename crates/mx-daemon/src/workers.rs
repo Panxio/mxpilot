@@ -1,4 +1,4 @@
-use crate::ipc::protocol::TOP_BUTTON_CID;
+use crate::ipc::protocol::{is_valid_cid, TOP_BUTTON_CID};
 use crate::state::{DaemonState, State};
 use evdev::KeyCode;
 use mx_core::device::HidppDevice;
@@ -270,15 +270,41 @@ pub fn run_hid_worker(
         // 5. Bucle Activo de Eventos HID++ (guarda la acción exacta en Down para liberar la misma en Up)
         let mut tracked_pressed: HashMap<u16, Option<Action>> = HashMap::new();
         tracked_pressed.insert(TOP_BUTTON_CID, None);
+        let mut active_diverted_cids: HashSet<u16> = HashSet::new();
+        active_diverted_cids.insert(TOP_BUTTON_CID);
+
+        // Re-aplicar divert a todos los CIDs mapeados en state previamente
+        {
+            let s = state.read().unwrap();
+            for &cid in s.mapping.keys() {
+                if is_valid_cid(cid) && cid != TOP_BUTTON_CID {
+                    if let Ok(()) = device.set_cid_divert(cid, true) {
+                        active_diverted_cids.insert(cid);
+                        tracked_pressed.insert(cid, None);
+                    }
+                }
+            }
+        }
+        {
+            let mut s = state.write().unwrap();
+            s.diverted_cids = active_diverted_cids.iter().copied().collect();
+        }
 
         while !shutdown.load(Ordering::Relaxed) {
             // Atender comandos IPC
             while let Ok(cmd) = cmd_receiver.try_recv() {
                 match cmd {
                     DaemonCommand::SetAction { cid, action: _, reply } => {
-                        // En este MVP el botón superior es el divertible principal
-                        if cid == TOP_BUTTON_CID {
+                        if is_valid_cid(cid) {
                             let res = device.set_cid_divert(cid, true).map_err(|e| e.to_string());
+                            if res.is_ok() {
+                                active_diverted_cids.insert(cid);
+                                tracked_pressed.entry(cid).or_insert(None);
+                                let mut s = state.write().unwrap();
+                                if !s.diverted_cids.contains(&cid) {
+                                    s.diverted_cids.push(cid);
+                                }
+                            }
                             let _ = reply.send(res);
                         } else {
                             let _ = reply.send(Err(format!("CID 0x{:04X} no soportado para desvío", cid)));
@@ -314,30 +340,38 @@ pub fn run_hid_worker(
                         && frame.function_id == 0
                     {
                         let event = DivertedButtonsEvent::parse(&frame.params);
-                        let is_pressed = event.is_cid_pressed(TOP_BUTTON_CID);
-                        let was_pressed = tracked_pressed.get(&TOP_BUTTON_CID).and_then(|opt| opt.as_ref()).is_some();
+                        for &cid in &active_diverted_cids {
+                            let is_pressed = event.is_cid_pressed(cid);
+                            let was_pressed = tracked_pressed.get(&cid).and_then(|opt| opt.as_ref()).is_some();
 
-                        if is_pressed && !was_pressed {
-                            let current_action = {
-                                let s = state.read().unwrap();
-                                s.mapping.get(&TOP_BUTTON_CID).and_then(|p| p.to_action().ok()).unwrap_or_else(Action::super_key)
-                            };
-                            tracked_pressed.insert(TOP_BUTTON_CID, Some(current_action.clone()));
-                            if input_sender.send(InputEvent::Down {
-                                epoch,
-                                action: current_action,
-                            }).is_err() {
-                                let mut s = state.write().unwrap();
-                                s.dropped_events += 1;
-                            }
-                        } else if !is_pressed && was_pressed {
-                            if let Some(pressed_action) = tracked_pressed.insert(TOP_BUTTON_CID, None).flatten() {
-                                if input_sender.send(InputEvent::Up {
+                            if is_pressed && !was_pressed {
+                                let current_action = {
+                                    let s = state.read().unwrap();
+                                    s.mapping.get(&cid).and_then(|p| p.to_action().ok()).unwrap_or_else(|| {
+                                        if cid == TOP_BUTTON_CID {
+                                            Action::super_key()
+                                        } else {
+                                            Action::None
+                                        }
+                                    })
+                                };
+                                tracked_pressed.insert(cid, Some(current_action.clone()));
+                                if input_sender.send(InputEvent::Down {
                                     epoch,
-                                    action: pressed_action,
+                                    action: current_action,
                                 }).is_err() {
                                     let mut s = state.write().unwrap();
                                     s.dropped_events += 1;
+                                }
+                            } else if !is_pressed && was_pressed {
+                                if let Some(pressed_action) = tracked_pressed.insert(cid, None).flatten() {
+                                    if input_sender.send(InputEvent::Up {
+                                        epoch,
+                                        action: pressed_action,
+                                    }).is_err() {
+                                        let mut s = state.write().unwrap();
+                                        s.dropped_events += 1;
+                                    }
                                 }
                             }
                         }
@@ -360,7 +394,9 @@ pub fn run_hid_worker(
         // Salida limpia de conexión
         log::info!("Cerrando sesión de divert en época {}...", epoch);
         let _ = input_sender.send(InputEvent::ReleaseAll);
-        let _ = device.set_cid_divert(TOP_BUTTON_CID, false);
+        for &cid in &active_diverted_cids {
+            let _ = device.set_cid_divert(cid, false);
+        }
     }
 
     // Salida global del daemon

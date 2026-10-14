@@ -101,26 +101,24 @@
 
 <div class="flex flex-col h-full bg-slate-900/40 rounded-2xl border border-slate-800/80 p-4 shadow-inner backdrop-blur-sm">
   <!-- Encabezado del configurador de acción -->
-  <div class="flex items-center justify-between pb-3 border-b border-slate-800/60 mb-3">
-    <div>
-      <div class="flex items-center space-x-2">
-        <h2 class="text-sm font-semibold text-white tracking-wide">
-          {selectedButtonDef.name}
-        </h2>
-      </div>
-      <p class="text-xs text-slate-400 mt-0.5">
+  <div class="flex items-center justify-between pb-3 border-b border-slate-800/60 mb-3 gap-3">
+    <div class="min-w-0 flex-1">
+      <h2 class="text-sm font-semibold text-white tracking-wide truncate">
+        {selectedButtonDef.name}
+      </h2>
+      <p class="text-xs text-slate-400 mt-0.5 line-clamp-1">
         {selectedButtonDef.description}
       </p>
     </div>
 
     <!-- Indicador de estado de fábrica o personalizado (sin códigos técnicos) -->
-    <div>
+    <div class="flex-shrink-0">
       {#if isDefaultSystem}
-        <span class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800/90 border border-slate-700/80 text-slate-300">
+        <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800/90 border border-slate-700/80 text-slate-300">
           Función de Fábrica
         </span>
       {:else}
-        <span class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center space-x-1.5 shadow-sm shadow-emerald-500/10">
+        <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 space-x-1.5 shadow-sm shadow-emerald-500/10">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>Personalizado</span>
         </span>
