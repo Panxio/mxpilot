@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fondo Squircle Verde Esmeralda Sólido Vibrante (#059669, contraste 5.2:1 contra dock #1e1e1e) -->
+  <rect width="512" height="512" rx="112" ry="112" fill="#059669"/>
+
+  <!-- Monograma MX plano, limpio, sin sombras, en blanco puro (#ffffff) -->
+  <g fill="#ffffff">
+    <!-- Letra M (X: 86 a 246, ancho 160) -->
+    <path d="M 86 356 
+             L 86 156 
+             L 126 156 
+             L 166 256 
+             L 206 156 
+             L 246 156 
+             L 246 356 
+             L 208 356 
+             L 208 220 
+             L 178 300 
+             L 154 300 
+             L 124 220 
+             L 124 356 
+             Z"/>
+
+    <!-- Letra X (X: 266 a 426, ancho 160, 20px de separación limpia) -->
+    <path d="M 266 156 
+             L 306 156 
+             L 346 236 
+             L 386 156 
+             L 426 156 
+             L 366 256 
+             L 426 356 
+             L 386 356 
+             L 346 276 
+             L 306 356 
+             L 266 356 
+             L 326 256 
+             Z"/>
+  </g>
+
+  <!-- Acento ergonómico superior de cresta en verde menta claro (#a7f3d0) -->
+  <circle cx="410" cy="140" r="16" fill="#a7f3d0"/>
+  <circle cx="410" cy="140" r="8" fill="#047857"/>
+</svg>

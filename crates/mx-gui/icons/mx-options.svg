@@ -1,66 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <defs>
-    <!-- Gradiente Verde Esmeralda Rico y Auténtico (claramente verde, sin tonos negros) -->
-    <linearGradient id="bgGrad" x1="10%" y1="10%" x2="90%" y2="90%">
-      <stop offset="0%" stop-color="#059669" />
-      <stop offset="60%" stop-color="#047857" />
-      <stop offset="100%" stop-color="#065f46" />
-    </linearGradient>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Contenedor oscuro estándar FreeDesktop/Lekto -->
+  <rect width="512" height="512" rx="112" ry="112" fill="#151b23"/>
 
-    <!-- Resplandor sutil superior -->
-    <linearGradient id="topGloss" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18" />
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0" />
-    </linearGradient>
-  </defs>
+  <!-- Silueta ergonómica maciza en blanco puro (#ffffff, contraste 17.5:1) -->
+  <path d="M 120 416 
+           C 95 416 88 380 110 320 
+           C 145 220 185 140 220 96 
+           C 235 78 265 78 295 92 
+           C 335 112 375 180 400 270 
+           C 420 340 420 416 380 416 
+           Z" fill="#ffffff"/>
 
-  <!-- 1. Fondo Squircle GNOME/FreeDesktop en Verde Esmeralda Rico -->
-  <rect x="24" y="24" width="464" height="464" rx="108" ry="108"
-        fill="url(#bgGrad)" stroke="#10b981" stroke-width="3" stroke-opacity="0.5" />
+  <!-- Placa ergonómica de cúspide a 57° en Verde Esmeralda Vibrante (#10b981) -->
+  <path d="M 220 96 
+           C 235 78 265 78 295 92 
+           L 275 140 
+           C 255 130 235 125 210 135 
+           Z" fill="#10b981"/>
 
-  <!-- 2. Brillo cenital sutil en la mitad superior -->
-  <rect x="26" y="26" width="460" height="230" rx="106" ry="106"
-        fill="url(#topGloss)" />
-
-  <!-- 3. Acento ergonómico sutil a 57° -->
-  <path d="M 100,410 C 220,430 360,370 410,230" 
-        fill="none" stroke="#a7f3d0" stroke-width="5" stroke-linecap="round" opacity="0.3" />
-
-  <!-- 4. Monograma MX Nítido, Centrado y Blanco Puro (20px de separación libre entre M y X) -->
-  <g fill="#ffffff">
-    <!-- Letra M (X: 86 a 246, ancho 160) -->
-    <path d="M 86,346 
-             L 86,166 
-             L 126,166 
-             L 166,260 
-             L 206,166 
-             L 246,166 
-             L 246,346 
-             L 210,346 
-             L 210,224 
-             L 178,300 
-             L 154,300 
-             L 122,224 
-             L 122,346 
-             Z" />
-
-    <!-- Letra X (X: 266 a 426, ancho 160) -->
-    <path d="M 266,166 
-             L 304,166 
-             L 346,236 
-             L 388,166 
-             L 426,166 
-             L 368,256 
-             L 426,346 
-             L 388,346 
-             L 346,276 
-             L 304,346 
-             L 266,346 
-             L 324,256 
-             Z" />
+  <!-- Monograma MX troquelado en el cuerpo (#151b23) para máxima legibilidad -->
+  <g fill="#151b23">
+    <!-- Letra M -->
+    <path d="M 160 380 L 160 230 L 195 230 L 225 310 L 255 230 L 290 230 L 290 380 L 260 380 L 260 280 L 235 345 L 215 345 L 190 280 L 190 380 Z"/>
+    <!-- Letra X -->
+    <path d="M 305 230 L 335 230 L 365 295 L 395 230 L 425 230 L 385 305 L 425 380 L 395 380 L 365 315 L 335 380 L 305 380 L 345 305 Z"/>
   </g>
 
-  <!-- 5. Indicador de cúspide ergonómica 57° -->
-  <circle cx="405" cy="180" r="9" fill="#a7f3d0" />
-  <circle cx="405" cy="180" r="15" fill="none" stroke="#34d399" stroke-width="2" opacity="0.7" />
+  <!-- Botón superior circular en Verde Esmeralda (#10b981) -->
+  <circle cx="260" cy="112" r="12" fill="#059669"/>
+  <circle cx="260" cy="112" r="7" fill="#34d399"/>
 </svg>
