@@ -1,81 +1,72 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <!-- Degradado suave verde esmeralda técnico profundo -->
+    <!-- Degradado Verde Esmeralda Oscuro Técnico -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f5132" />
-      <stop offset="50%" stop-color="#0a3d25" />
-      <stop offset="100%" stop-color="#052617" />
+      <stop offset="0%" stop-color="#065f46" />
+      <stop offset="50%" stop-color="#044e3b" />
+      <stop offset="100%" stop-color="#022c22" />
     </linearGradient>
 
-    <!-- Bisel de iluminación superior sutil -->
+    <!-- Bisel interior sutil -->
     <linearGradient id="bevelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18" />
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
       <stop offset="50%" stop-color="#ffffff" stop-opacity="0.04" />
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.35" />
     </linearGradient>
 
-    <!-- Resplandor esmeralda del acento ergonómico 57° -->
-    <linearGradient id="accentGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#10b981" />
-      <stop offset="100%" stop-color="#34d399" />
-    </linearGradient>
-
-    <!-- Sombra de profundidad de glifo -->
+    <!-- Sombra de profundidad de glifos -->
     <filter id="glyphShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#021a0f" flood-opacity="0.6" />
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#01150f" flood-opacity="0.7" />
     </filter>
   </defs>
 
-  <!-- 1. Fondo Squircle (Curvatura estándar GNOME/FreeDesktop) -->
+  <!-- Fondo Squircle estándar FreeDesktop / GNOME -->
   <rect x="24" y="24" width="464" height="464" rx="108" ry="108"
-        fill="url(#bgGrad)" stroke="#166534" stroke-width="3" />
+        fill="url(#bgGrad)" stroke="#10b981" stroke-width="2.5" stroke-opacity="0.6" />
 
-  <!-- 2. Bisel interno de relieve suave -->
-  <rect x="28" y="28" width="456" height="456" rx="104" ry="104"
-        fill="none" stroke="url(#bevelGrad)" stroke-width="4" />
+  <!-- Bisel de iluminación interna -->
+  <rect x="27" y="27" width="458" height="458" rx="105" ry="105"
+        fill="none" stroke="url(#bevelGrad)" stroke-width="3" />
 
-  <!-- 3. Arco ergonómico sutil a 57° en segundo plano -->
-  <path d="M 120,400 C 260,420 380,340 400,210" 
-        fill="none" stroke="url(#accentGrad)" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+  <!-- Acento ergonómico sutil a 57° -->
+  <path d="M 100,410 C 220,430 360,370 410,230" 
+        fill="none" stroke="#34d399" stroke-width="5" stroke-linecap="round" opacity="0.25" />
 
-  <!-- 4. Monograma Tipográfico 'MX' de Alto Contraste (Blanco Nítido #F8FAFC) -->
-  <g filter="url(#glyphShadow)">
-    <!-- Letra 'M' estilizada y técnica -->
-    <path d="M 108,348 
-             L 108,164 
-             L 156,164 
-             L 214,272 
-             L 272,164 
-             L 320,164 
-             L 320,348 
-             L 276,348 
-             L 276,228 
-             L 228,320 
-             L 200,320 
-             L 152,228 
-             L 152,348 
-             Z" 
-          fill="#f8fafc" />
+  <!-- Monograma MX con separación limpia (20px de espacio entre M y X) -->
+  <g filter="url(#glyphShadow)" fill="#f8fafc">
+    <!-- Letra M (X: 86 a 246, ancho 160) -->
+    <path d="M 86,346 
+             L 86,166 
+             L 126,166 
+             L 166,260 
+             L 206,166 
+             L 246,166 
+             L 246,346 
+             L 210,346 
+             L 210,224 
+             L 178,300 
+             L 154,300 
+             L 122,224 
+             L 122,346 
+             Z" />
 
-    <!-- Letra 'X' con corte moderno entrelazado -->
-    <path d="M 336,164 
-             L 380,164 
-             L 424,244 
-             L 468,164 
-             L 512,164 
-             L 450,256 
-             L 516,348 
-             L 470,348 
-             L 424,268 
-             L 378,348 
-             L 332,348 
-             L 398,256 
-             Z" 
-          transform="translate(-64, 0)"
-          fill="#f8fafc" />
+    <!-- Letra X (X: 266 a 426, ancho 160) -->
+    <path d="M 266,166 
+             L 304,166 
+             L 346,236 
+             L 388,166 
+             L 426,166 
+             L 368,256 
+             L 426,346 
+             L 388,346 
+             L 346,276 
+             L 304,346 
+             L 266,346 
+             L 324,256 
+             Z" />
   </g>
 
-  <!-- 5. Indicador de cresta vertical (acento de precisión en 57°) -->
-  <circle cx="390" cy="180" r="10" fill="#34d399" />
-  <circle cx="390" cy="180" r="16" fill="none" stroke="#10b981" stroke-width="2" opacity="0.6" />
+  <!-- Indicador de cúspide ergonómica 57° -->
+  <circle cx="405" cy="180" r="9" fill="#34d399" />
+  <circle cx="405" cy="180" r="15" fill="none" stroke="#10b981" stroke-width="2" opacity="0.6" />
 </svg>

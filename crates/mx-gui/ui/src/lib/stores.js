@@ -39,7 +39,7 @@ export const BUTTON_DEFINITIONS = [
   {
     cid: 0x00FD,
     id: 'svg-btn-top',
-    name: 'Botón Superior (DPI / Kill-Gate)',
+    name: 'Botón Superior',
     description: 'Ubicado en la cresta metálica de 57°. Controla acciones globales o atajos rápidos.',
     category: 'Cúspide',
   },

@@ -99,7 +99,7 @@
   <header class="flex items-center justify-between px-5 py-3 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur">
     <!-- Logotipo y Nombre del Dispositivo -->
     <div class="flex items-center space-x-3">
-      <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-800 to-teal-700 shadow-md shadow-emerald-950/40 border border-emerald-600/30 text-white font-bold text-sm">
+      <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-900 to-emerald-800 shadow-md shadow-emerald-950/40 border border-emerald-500/40 text-white font-bold text-sm">
         MX
       </div>
       <div>

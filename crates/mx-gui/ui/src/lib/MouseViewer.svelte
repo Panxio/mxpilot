@@ -253,6 +253,8 @@
   <!-- Fila de botones para selección rápida con tooltip/etiqueta -->
   <div class="grid grid-cols-2 gap-2 w-full mt-1">
     {#each BUTTON_DEFINITIONS as btn}
+      {@const actName = getButtonActionName(btn.cid, $statusData.mapping)}
+      {@const isCustom = actName !== 'Por defecto del sistema'}
       <button
         type="button"
         on:click={() => selectButton(btn.cid)}
@@ -263,10 +265,12 @@
       >
         <div class="flex items-center justify-between w-full">
           <span class="font-medium truncate">{btn.name}</span>
-          <span class="text-[10px] font-mono text-slate-400">0x{btn.cid.toString(16).toUpperCase()}</span>
+          {#if isCustom}
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+          {/if}
         </div>
-        <span class="text-[11px] text-slate-400 truncate mt-0.5">
-          {getButtonActionName(btn.cid, $statusData.mapping)}
+        <span class="text-[11px] {isCustom ? 'text-emerald-400' : 'text-slate-400'} truncate mt-0.5">
+          {actName}
         </span>
       </button>
     {/each}

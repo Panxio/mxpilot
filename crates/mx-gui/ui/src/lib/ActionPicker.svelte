@@ -58,15 +58,21 @@
   let selectedButtonDef;
   $: selectedButtonDef = BUTTON_DEFINITIONS.find((b) => b.cid === $selectedCid) || BUTTON_DEFINITIONS[0];
 
-  function isActionCurrent(presetPayload) {
-    const current = getActionForCid($statusData.mapping, $selectedCid);
-    if (!current) return false;
-    return isActionEqual(current, presetPayload);
-  }
+  // Acción reactiva actualmente configurada para el botón seleccionado
+  let currentAction = null;
+  $: currentAction = getActionForCid($statusData.mapping, $selectedCid);
+  $: isDefaultSystem = !currentAction;
 
-  function isDefaultSystemState() {
-    const current = getActionForCid($statusData.mapping, $selectedCid);
-    return !current;
+  // Lista reactiva ordenada: la acción actualmente activa se despliega primero
+  let sortedPresets = PRESET_ACTIONS;
+  $: {
+    sortedPresets = [...PRESET_ACTIONS].sort((a, b) => {
+      const aActive = isActionEqual(currentAction, a.payload);
+      const bActive = isActionEqual(currentAction, b.payload);
+      if (aActive && !bActive) return -1;
+      if (!aActive && bActive) return 1;
+      return 0;
+    });
   }
 
   async function applyAction(preset) {
@@ -101,44 +107,50 @@
         <h2 class="text-sm font-semibold text-white tracking-wide">
           {selectedButtonDef.name}
         </h2>
-        {#if isDefaultSystemState()}
-          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 border border-amber-500/20 text-amber-400">
-            Fábrica / Sistema
-          </span>
-        {/if}
       </div>
       <p class="text-xs text-slate-400 mt-0.5">
         {selectedButtonDef.description}
       </p>
     </div>
-    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-      CID 0x{selectedButtonDef.cid.toString(16).toUpperCase()}
-    </span>
+
+    <!-- Indicador de estado de fábrica o personalizado (sin códigos técnicos) -->
+    <div>
+      {#if isDefaultSystem}
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800/90 border border-slate-700/80 text-slate-300">
+          Función de Fábrica
+        </span>
+      {:else}
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center space-x-1.5 shadow-sm shadow-emerald-500/10">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Personalizado</span>
+        </span>
+      {/if}
+    </div>
   </div>
 
   <!-- Lista de acciones permitidas estilo Libadwaita Cards -->
   <div class="flex-1 overflow-y-auto space-y-2 pr-1">
-    {#each PRESET_ACTIONS as preset}
-      {@const isActive = isActionCurrent(preset.payload)}
+    {#each sortedPresets as preset (preset.id)}
+      {@const isActive = isActionEqual(currentAction, preset.payload)}
       <button
         type="button"
         disabled={$isPendingAction || $uiState !== 'Connected'}
         on:click={() => applyAction(preset)}
         class="group w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all duration-150
           {isActive 
-            ? 'bg-indigo-600/20 border-indigo-500/60 shadow-sm shadow-indigo-500/20 ring-1 ring-indigo-500/30' 
+            ? 'bg-emerald-950/30 border-emerald-500/70 shadow-sm shadow-emerald-500/20 ring-1 ring-emerald-500/40' 
             : 'bg-slate-800/40 border-slate-700/40 hover:bg-slate-800/70 hover:border-slate-600/60'}
           {$isPendingAction || $uiState !== 'Connected' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
       >
         <div class="flex items-center space-x-3 min-w-0">
-          <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900/60 border border-slate-700/60 text-sm">
+          <div class="flex items-center justify-center w-8 h-8 rounded-lg {isActive ? 'bg-emerald-900/60 border border-emerald-600/60 text-emerald-300' : 'bg-slate-900/60 border border-slate-700/60 text-slate-300'} text-sm">
             {preset.icon}
           </div>
           <div class="min-w-0">
-            <div class="text-xs font-medium text-slate-200 truncate">
+            <div class="text-xs font-medium {isActive ? 'text-emerald-200' : 'text-slate-200'} truncate">
               {preset.label}
             </div>
-            <div class="text-[11px] text-slate-400 truncate mt-0.5">
+            <div class="text-[11px] {isActive ? 'text-emerald-400/80' : 'text-slate-400'} truncate mt-0.5">
               {preset.desc}
             </div>
           </div>
@@ -146,8 +158,8 @@
 
         <div class="ml-2 flex-shrink-0">
           {#if isActive}
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Activo
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/20">
+              ✓ Activo
             </span>
           {:else}
             <span class="text-xs text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
