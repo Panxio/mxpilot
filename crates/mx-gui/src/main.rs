@@ -47,8 +47,9 @@ fn main() {
                     info!("Creando ventana 'main' dinámicamente");
                     WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
                         .title("MX Options Linux")
-                        .inner_size(760.0, 540.0)
-                        .resizable(false)
+                        .inner_size(960.0, 620.0)
+                        .min_inner_size(840.0, 520.0)
+                        .resizable(true)
                         .build()?
                 }
             };

@@ -1,6 +1,7 @@
 <script>
   import { selectedCid, statusData, isPendingAction, errorMessage, BUTTON_DEFINITIONS, uiState } from './stores.js';
   import { setAction, getStatus } from './api.js';
+  import { isActionEqual, getActionForCid } from './actions.js';
 
   const PRESET_ACTIONS = [
     {
@@ -58,9 +59,14 @@
   $: selectedButtonDef = BUTTON_DEFINITIONS.find((b) => b.cid === $selectedCid) || BUTTON_DEFINITIONS[0];
 
   function isActionCurrent(presetPayload) {
-    const current = $statusData.mapping ? $statusData.mapping[$selectedCid] : null;
-    if (!current) return presetPayload.type === 'None';
-    return JSON.stringify(current) === JSON.stringify(presetPayload);
+    const current = getActionForCid($statusData.mapping, $selectedCid);
+    if (!current) return false;
+    return isActionEqual(current, presetPayload);
+  }
+
+  function isDefaultSystemState() {
+    const current = getActionForCid($statusData.mapping, $selectedCid);
+    return !current;
   }
 
   async function applyAction(preset) {
@@ -91,9 +97,16 @@
   <!-- Encabezado del configurador de acción -->
   <div class="flex items-center justify-between pb-3 border-b border-slate-800/60 mb-3">
     <div>
-      <h2 class="text-sm font-semibold text-white tracking-wide">
-        {selectedButtonDef.name}
-      </h2>
+      <div class="flex items-center space-x-2">
+        <h2 class="text-sm font-semibold text-white tracking-wide">
+          {selectedButtonDef.name}
+        </h2>
+        {#if isDefaultSystemState()}
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 border border-amber-500/20 text-amber-400">
+            Fábrica / Sistema
+          </span>
+        {/if}
+      </div>
       <p class="text-xs text-slate-400 mt-0.5">
         {selectedButtonDef.description}
       </p>

@@ -28,7 +28,7 @@ mkdir -p "$LOGS" "$PROMPTS_DIR" "$REPORTS_DIR"
 AGENTES=(
   "deepseek|opencode-go/deepseek-v4.1-flash|Arquitectura y Sistemas"
   "haiku|opencode-go/claude-haiku-5-5|Métricas y Aceptación"
-  "muse|opencode-go/muse-spark-1.3|Kill-Gates y Telemetría"
+  "muse|opencode-go/muse-spark-1.3-contributor|Kill-Gates y Telemetría"
   "luna|opencode-go/gpt-6-luna|Verificación Empírica"
 )
 
@@ -60,6 +60,7 @@ lanzar_agente() {
   date +%H:%M:%S > "$LOGS/$log_prefix.inicio"
   echo "EJECUTANDO" > "$LOGS/$log_prefix.status"
 
+  local code=0
   systemd-run --user --scope -p MemoryMax=2G \
     timeout 10m opencode run "$(cat "$prompt_file")" \
       --standalone \
@@ -68,9 +69,8 @@ lanzar_agente() {
       --print-logs \
       --log-level info \
       --format json \
-      > "$LOGS/$log_prefix.json" 2> "$LOGS/$log_prefix.err" < /dev/null
+      > "$LOGS/$log_prefix.json" 2> "$LOGS/$log_prefix.err" < /dev/null || code=$?
 
-  local code=$?
   echo "$code" > "$LOGS/$log_prefix.exit"
   date +%H:%M:%S > "$LOGS/$log_prefix.fin"
   date +%s > "$LOGS/$log_prefix.end_ts"

@@ -3,6 +3,7 @@
   import { getHealth, getGuiMemory } from './api.js';
 
   let isLoading = false;
+  let copyFeedback = false;
 
   async function refreshHealth() {
     isLoading = true;
@@ -14,6 +15,21 @@
       console.error('Error actualizando métricas de salud:', err);
     } finally {
       isLoading = false;
+    }
+  }
+
+  async function copyDiagnostics() {
+    try {
+      const payload = {
+        timestamp: new Date().toISOString(),
+        health: $healthData,
+        gui_memory_kb: $guiMemoryKb,
+      };
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      copyFeedback = true;
+      setTimeout(() => { copyFeedback = false; }, 2000);
+    } catch (err) {
+      console.error('Error al copiar diagnóstico:', err);
     }
   }
 
@@ -111,14 +127,26 @@
 
       <!-- Pie del modal -->
       <div class="flex items-center justify-between pt-3 border-t border-slate-800 mt-auto">
-        <button
-          type="button"
-          disabled={isLoading}
-          on:click={refreshHealth}
-          class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors flex items-center space-x-1.5"
-        >
-          <span>{isLoading ? 'Consultando...' : 'Actualizar'}</span>
-        </button>
+        <div class="flex items-center space-x-2">
+          <button
+            type="button"
+            disabled={isLoading}
+            on:click={refreshHealth}
+            class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors flex items-center space-x-1.5"
+          >
+            <span>{isLoading ? 'Consultando...' : 'Actualizar'}</span>
+          </button>
+          
+          <button
+            type="button"
+            disabled={!$healthData}
+            on:click={copyDiagnostics}
+            class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors flex items-center space-x-1.5 disabled:opacity-50"
+          >
+            <span>{copyFeedback ? '✓ Copiado' : '📋 Copiar Diagnóstico'}</span>
+          </button>
+        </div>
+
         <button
           type="button"
           on:click={closeModal}

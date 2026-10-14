@@ -44,7 +44,7 @@
   {/if}
 
   <!-- Contenedor del SVG Blueprint con escala responsiva -->
-  <div class="w-full max-w-[340px] aspect-[360/320] my-2 transition-all duration-300 {$uiState !== 'Connected' ? 'opacity-40 grayscale-[40%]' : ''}">
+  <div class="w-full max-w-[420px] aspect-[360/320] my-2 transition-all duration-300 {$uiState !== 'Connected' ? 'opacity-40 grayscale-[40%]' : ''}">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" width="100%" height="100%" class="overflow-visible select-none">
       <defs>
         <!-- Gradiente para el chasis principal oscuro -->

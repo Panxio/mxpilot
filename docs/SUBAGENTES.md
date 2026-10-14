@@ -13,7 +13,7 @@ Este catálogo reúne la lista verificada de subagentes y modelos probados en la
 | `opencode-go/deepseek-v4.1-flash` | **Arquitectura y Sistemas Linux** | **Mejor evaluado (1er lugar).** Decisiones firmes y sin ambigüedad: daemon `systemd --user`, reglas udev con `TAG+="uaccess"`, prevención de sockets huérfanos, IPC seguro (`SO_PEERCRED`), prohibición de `Exec` arbitrario. |
 | `opencode-go/claude-haiku-5-5` | **Métricas y Criterios de Aceptación** | **Excelente (2do lugar).** Formuló los mejores criterios medibles: p95 latencia < 20 ms, RAM total < 80 MB, 20 reconexiones BT, ±10% batería vs Solaar. Plan F0–F5 reutilizable. |
 | `opencode-go/mimo-v2.6-flash` | **Análisis de Features HID++** | Bueno. Señaló con precisión que la feature `0x2201` (DPI) puede no estar expuesta por firmware en el MX Vertical y propuso pruebas de pulsaciones sin duplicados (≥99%). |
-| `opencode-go/muse-spark-1.3` | **Kill-Gates y Telemetría** | Rápido (89 s). Propuso la herramienta `mx-diag --dump` desde el día 1, verificación de licencia GPL-2.0 y convivencia con Solaar. |
+| `opencode-go/muse-spark-1.3-contributor` | **Kill-Gates y Telemetría** | Rápido (89 s). Propuso la herramienta `mx-diag --dump` desde el día 1, verificación de licencia GPL-2.0 y convivencia con Solaar. **Nota crítica:** Requiere el sufijo `-contributor` exacto; la variante corta no existe en el catálogo. |
 | `opencode-go/qwen3.8-flash` | **Ciclo de Vida y Robustez** | Identificó que el 40% del esfuerzo real está en la robustez de Bluetooth y ciclo de vida del daemon (suspensión/wake-up). Propuso usar arte visual propio en vez de assets de Logitech. |
 | `opencode-go/glm-5.3-flash` | **Planes de Trabajo y Estimaciones** | Detallado. **Precaución:** requiere límite de memoria (`MemoryMax=2G`) porque tiende a consumir RAM excesiva. |
 | `opencode-go/gpt-6-luna` | **Verificaciones Empíricas** | Cautela con afirmaciones de "100% compatibilidad" hasta no verificar con firmware real. |
@@ -94,5 +94,13 @@ Para evitar errores de lanzamiento, loops visuales en la consola y saturación d
    - Para cualquier nueva fase (Fase 5, Fase 6), clonar esta plantilla en vez de reescribir la lógica de despacho y sondeo desde cero.
 4. **Extracción Determinista de Salidas JSON:**
    - Todo script de extracción Python ejecutado inline (`python3 - << 'PYEOF'`) debe recibir los directorios absolutos (`$REPO`, `$LOGS`, `$REPORTS`) explícitamente como argumentos de línea de comandos (`sys.argv`), evitando depender de `os.getcwd()` o `__file__`.
+5. **Captura Robusta de Códigos de Salida bajo `set -e`:**
+   - En scripts que operen con `set -euo pipefail`, nunca ejecutar `systemd-run ...` directamente seguido de `local code=$?`. Si el subproceso falla inmediatamente (ej. timeout o modelo no disponible), `set -e` aborta el subshell en esa línea y nunca se ejecutan las líneas posteriores que escriben los archivos `.status` (`FALLIDO`) o `.exit`.
+   - **Consecuencia:** El monitor de la tanda verá el archivo `.status` atascado permanentemente en `EJECUTANDO` y esperará en bucle de latido para siempre.
+   - **Solución Obligatoria:** Capturar el código en la misma línea:
+     ```bash
+     local code=0
+     systemd-run ... || code=$?
+     ```
 
 

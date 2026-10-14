@@ -13,9 +13,11 @@
       {
         "label": "main",
         "title": "MX Options Linux",
-        "width": 760,
-        "height": 540,
-        "resizable": false,
+        "width": 960,
+        "height": 620,
+        "minWidth": 840,
+        "minHeight": 520,
+        "resizable": true,
         "fullscreen": false,
         "visible": true,
         "center": true

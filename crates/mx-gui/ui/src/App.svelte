@@ -99,7 +99,7 @@
   <header class="flex items-center justify-between px-5 py-3 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur">
     <!-- Logotipo y Nombre del Dispositivo -->
     <div class="flex items-center space-x-3">
-      <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 shadow-md shadow-indigo-500/20 text-white font-bold text-sm">
+      <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-800 to-teal-700 shadow-md shadow-emerald-950/40 border border-emerald-600/30 text-white font-bold text-sm">
         MX
       </div>
       <div>
@@ -126,11 +126,11 @@
       <button
         type="button"
         on:click={openTelemetry}
-        title="Ver métricas de telemetría y salud"
-        class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800 hover:bg-slate-700/80 text-slate-300 border border-slate-700 transition-colors"
+        title="Ver diagnóstico y telemetría"
+        class="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-800 hover:bg-slate-700/80 text-slate-300 border border-slate-700 transition-colors"
       >
-        <span class="text-[11px]">⚡</span>
-        <span>Salud</span>
+        <span class="text-[12px]">🛠</span>
+        <span>Diagnóstico</span>
       </button>
     </div>
   </header>
@@ -168,8 +168,8 @@
     </div>
   {/if}
 
-  <!-- Contenido Principal: Panel Dividido -->
-  <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 min-h-0">
+  <!-- Contenido Principal: Panel Dividido Lado a Lado -->
+  <div class="flex-1 grid grid-cols-2 gap-5 p-5 min-h-0">
     <!-- Columna Izquierda: Visualizador Blueprint SVG -->
     <div class="flex flex-col h-full min-h-0">
       <MouseViewer />
