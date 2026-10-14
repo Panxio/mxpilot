@@ -51,9 +51,12 @@ pub fn start_poller(app: AppHandle, client: Arc<DaemonClient>) {
                 match client.get_status() {
                     Ok(status) => {
                         let _ = app.emit("status-changed", &status);
+                        crate::tray::update_tray_status(&app, &status);
                     }
                     Err(err) => {
-                        let _ = app.emit("status-error", err.to_string());
+                        let err_str = err.to_string();
+                        let _ = app.emit("status-error", &err_str);
+                        crate::tray::update_tray_error(&app, &err_str);
                     }
                 }
             }

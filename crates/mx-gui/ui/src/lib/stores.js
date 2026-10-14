@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable } from 'svelte/store';
 
 /**
  * Estados de la máquina honesta de 4 vías:

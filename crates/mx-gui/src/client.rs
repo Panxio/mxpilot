@@ -348,30 +348,6 @@ impl DaemonClient {
         self.send_command(IpcCommand::SetAction { cid, action })?;
         Ok(())
     }
-
-    /// Inicia el servicio systemd de usuario ejecutando /usr/bin/systemctl.
-    pub fn start_systemd_service() -> Result<String, ClientError> {
-        let output = std::process::Command::new("/usr/bin/systemctl")
-            .args(["--user", "start", "mx-options.service"])
-            .stdin(std::process::Stdio::null())
-            .output()
-            .map_err(|e| ClientError::IoError(format!("Fallo ejecutando systemctl: {}", e)))?;
-
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let trimmed = if stderr.len() > 300 {
-                &stderr[..300]
-            } else {
-                &stderr
-            };
-            return Err(ClientError::DaemonError(format!(
-                "systemctl falló: {}",
-                trimmed.trim()
-            )));
-        }
-
-        Ok("Servicio iniciado (esperando disponibilidad...)".to_string())
-    }
 }
 
 /// Resuelve la ruta estándar de `mx-options.sock` según especificación F3 y F4.

@@ -72,3 +72,27 @@ Nunca aceptar el autoinforme del modelo. Antes de integrar una entrega de un sub
 1. Ejecutar el árbitro objetivo de la fase (ej: `cargo test`, `cargo clippy`, script de prueba con hardware).
 2. Verificar `git diff --stat` para comprobar que no tocó archivos no autorizados.
 3. Revisar el código fuente con el ojo crítico antes de hacer commit.
+
+---
+
+## 5. Patrón Antiloop y Buenas Prácticas para Scripts de Tandas Colegiadas
+
+Para evitar errores de lanzamiento, loops visuales en la consola y saturación de logs en sesiones multi-agente:
+
+1. **Monitor Basado en Eventos (Prevenir bucles visuales repetitivos):**
+   - **PROHIBIDO:** Imprimir la tabla completa de agentes repetidamente en un `while sleep 5`. Tanto en consola interactiva como en logs, esto llena el buffer de la terminal con cientos de líneas idénticas aparentando un bucle infinito colgado.
+   - **PATRÓN OBLIGATORIO:**
+     - Usar un array asociativo `declare -A prev_status` para almacenar el estado previo de cada agente.
+     - Emitir una línea compacta `[EVENTO]` **únicamente cuando un agente cambia de estado** (ej: `PENDIENTE -> EJECUTANDO` o `EJECUTANDO -> COMPLETADO`).
+     - Emitir un `[LATIDO]` discreto de una sola línea cada 30 segundos si aún hay agentes corriendo.
+     - Imprimir la tabla formateada completa **UNA SOLA VEZ** al finalizar todos los agentes.
+2. **Prevención de Escapes Accidentales en Bash:**
+   - Si un script de tanda se genera mediante un script o heredoc, verificar meticulosamente que variables como `$LOGS`, `$alias` o `$model` no queden precedidas por barras invertidas (`\$LOGS`), lo cual provoca errores fatales como `$LOGS/...: No such file or directory`.
+3. **Plantilla Canónica Reutilizable:**
+   - La implementación de referencia y canónica se encuentra versionada en:
+     [`scripts/templates/template-tanda.sh`](file:///home/panxio/Projects/mx-options-linux/scripts/templates/template-tanda.sh).
+   - Para cualquier nueva fase (Fase 5, Fase 6), clonar esta plantilla en vez de reescribir la lógica de despacho y sondeo desde cero.
+4. **Extracción Determinista de Salidas JSON:**
+   - Todo script de extracción Python ejecutado inline (`python3 - << 'PYEOF'`) debe recibir los directorios absolutos (`$REPO`, `$LOGS`, `$REPORTS`) explícitamente como argumentos de línea de comandos (`sys.argv`), evitando depender de `os.getcwd()` o `__file__`.
+
+

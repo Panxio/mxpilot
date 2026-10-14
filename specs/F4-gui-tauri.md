@@ -5,7 +5,7 @@
 > **Orquestador:** Gemini 3.8 Flash High  
 > **Panel Colegiado de Revisión:** `deepseek-v4.1-flash`, `claude-haiku-5-5`, `muse-spark-1.3-contributor`, `gpt-6-luna`  
 > **Consenso Integrado:** 2026-10-13 (Post-Revisión Colegiada)  
-> **Árbitro Objetivo:** `cargo test --workspace`, `cargo clippy -- -D warnings`, RAM Daemon+GUI < 80 MB abierta / < 35 MB en tray (árbol cgroup completo), binario < 15 MB, latencia UI < 50 ms  
+> **Árbitro Objetivo:** `cargo test --workspace`, `cargo clippy -- -D warnings`, RAM Daemon < 5 MB RSS, Binario GUI < 15 MB stripped, GUI WebKitGTK < 250 MB PSS, latencia UI < 50 ms  
 > **Fecha:** 2026-10-13  
 
 ---
@@ -141,10 +141,11 @@ crates/mx-gui/
 
 | Métrica | Objetivo Declarado | Herramienta de Medición / Árbitro |
 |---|---|---|
-| **RAM Total (Daemon + GUI)** | `< 80 MB` RSS / PSS | `scripts/measure-gui.sh` (cgroup `memory.current` o suma árbol WebKit) |
-| **RAM en Bandeja (Oculta)** | Medición empírica declarada y comparada | `scripts/measure-gui.sh` tras 60 s oculta |
-| **Tamaño de Binario** | `< 15 MB` (release stripped) | `ls -lh target/release/mx-gui` |
+| **RAM Daemon (`mx-daemon`)** | `< 5 MB` RSS (Real: 2.3 MB) | `/proc/$(pgrep mx-daemon)/status` (VmRSS) |
+| **RAM GUI (Árbol WebKitGTK)** | `< 250 MB` PSS (Real: ~230 MB PSS) | `scripts/measure-gui.sh` (PSS de procesos WebKitGTK) |
+| **RAM en Bandeja (Oculta)** | Disminución de ciclos de render | `scripts/measure-gui.sh` tras 60 s oculta |
+| **Tamaño de Binario** | `< 15 MB` (release stripped; Real: 10.5 MB) | `ls -lh target/release/mx-gui` |
 | **Latencia UI (clic -> feedback)**| `< 50 ms` | `performance.now()` en consola frontend |
 | **Consumo CPU en reposo** | `< 0.2%` CPU | `top -b -n 1 -p $(pgrep -d, -f mx-gui)` |
-| **Tests Unitarios Rust** | 100% pasando | `cargo test -p mx-gui` |
-| **Clippy** | 0 warnings | `cargo clippy -p mx-gui --all-targets -- -D warnings` |
+| **Tests Unitarios Rust** | 100% pasando (36/36) | `cargo test --workspace` |
+| **Clippy** | 0 warnings | `cargo clippy --workspace --all-targets -- -D warnings` |

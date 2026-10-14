@@ -111,7 +111,7 @@
         type="button"
         disabled={$isPendingAction || $uiState !== 'Connected'}
         on:click={() => applyAction(preset)}
-        class="w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all duration-150
+        class="group w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all duration-150
           {isActive 
             ? 'bg-indigo-600/20 border-indigo-500/60 shadow-sm shadow-indigo-500/20 ring-1 ring-indigo-500/30' 
             : 'bg-slate-800/40 border-slate-700/40 hover:bg-slate-800/70 hover:border-slate-600/60'}

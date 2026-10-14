@@ -6,17 +6,17 @@
 > Creado: 2026-10-13
 
 > ### 📌 RESUMEN EJECUTIVO DE RELEVO RÁPIDO (LEER AL INICIAR SESIÓN)
-> - **Última Sesión Cerrada:** Sesión 9 (Fase 4: GUI Tauri v2 & System Tray — Implementación Completa y Despliegue Verificado).
+> - **Última Sesión Cerrada:** Sesión 10 (Fase 4: Auditoría de Cierre Colegiada, Correcciones de ACL/Tray/Build y Cierre Formal).
 > - **Fases Aprobadas:**
 >   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-probe`) — Kill-gate superado.
 >   - ✅ **Fase 1:** Divert de Botón Superior & Inyección Virtual (`mx-uinput`, `mx-cli`) — RAII y Down/Up verificado.
 >   - ✅ **Fase 2:** Reglas `udev` (`70-mx-options.rules`) — Permisos de usuario sin `sudo`.
 >   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS 3.3 MB (<15 MB), parada limpia <0.1 s, fail-safe Zero Stuck Keys verificado.
->   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — Backend Rust asíncrono con Zero Hang UI, tray icon AppIndicator, frontend Svelte 5 + Tailwind v4 con blueprint SVG Gemini 4, integración de 4 vías honesta, centrado multimonitor, 36/36 tests pasando, 0 clippy warnings.
-> - **Fase Siguiente:** **Fase 5: Empaquetado (.deb) y Cierre Final**.
+>   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — Backend Rust asíncrono Zero Hang UI, tray icon dinámico con batería/tooltip, frontend Svelte 5 + Tailwind v4 con blueprint vectorial Gemini 4, capabilities Tauri v2 ACL para eventos, 36/36 tests pasando, 0 clippy warnings, binario 11 MB stripped.
+> - **Fase Siguiente:** **Fase 5: Empaquetado (.deb) y Distribución Limpia**.
 > - **Acción Inmediata al Retomar:**
->   1. Ejecutar tanda de auditoría de cierre de Fase 4 con los 4 subagentes (`scripts/run-dev.sh`).
->   2. Proceder a Fase 5: Generación de artefacto `.deb` con `cargo-deb` o script de empaquetado.
+>   1. Elaborar la especificación técnica `specs/F5-packaging-deb.md` (estructura del paquete `.deb`, dependencias de runtime WebKit/AppIndicator, `systemd --user` service unit, udev rules y `.desktop` launcher).
+>   2. Despachar tanda de revisión inicial de Fase 5 con la plantilla limpia `scripts/templates/template-tanda.sh`.
 
 ---
 
@@ -308,5 +308,44 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
      - Tests workspace: **36 tests pasando** (100% verde) ✅
      - Clippy: **0 warnings** en todo el workspace ✅
 - **Estado:** Fase 4 completada y operativa en el escritorio del usuario.
+
+---
+
+### Sesión 10 (2026-10-14) — Auditoría de Cierre Colegiada F4, Resolución de Hallazgos y Cierre Oficial
+- **Tanda de Auditoría Multi-Agente Ejecutada:**
+  - 4 subagentes especializados ejecutados con `scripts/run-f4-audit-cierre-tanda.sh` bajo `systemd-run -p MemoryMax=2G`, `< /dev/null`:
+    - `deepseek` (`opencode-go/deepseek-v4.1-flash`): Auditoría de arquitectura backend Rust Tauri v2.
+    - `haiku` (`opencode-go/claude-haiku-5-5`): Métricas de aceptación, SLA y presupuesto de memoria.
+    - `muse` (`opencode-go/muse-spark-1.3`): Máquina de estados honesta de 4 vías y telemetría.
+    - `luna` (`opencode-go/gpt-6-luna`): Integración Wayland/X11, system tray y lifecycle del escritorio.
+  - Reportes preservados en `.superpowers/audit_cierre_f4/reports/`.
+- **Hallazgos Críticos Subsanados de Inmediato:**
+  1. *H1 (Crítico - ACL Tauri v2 / Eventos Bloqueados):*
+     - DeepSeek descubrió que la ausencia de archivos de capabilities generaba `capabilities.json = {}`, bloqueando silenciosamente `plugin:event|listen` para `status-changed` / `status-error`.
+     - **Solución:** Creado `crates/mx-gui/capabilities/default.json` con `permissions: ["core:default"]` acotado a `windows: ["main"]`. Verificado que `capabilities.json` en el build output ahora contiene los permisos de core requeridos.
+  2. *H2 (Alto - Reproducibilidad de Build Frontend):*
+     - DeepSeek detectó que `tauri.conf.json` carecía de `beforeBuildCommand`, lo que fallaría en entornos limpios de CI / empaquetado donde `dist/` no está versionado.
+     - **Solución:** Agregado `"beforeBuildCommand": "npm --prefix ui run build"` y `"beforeDevCommand": "npm --prefix ui run dev"` en `crates/mx-gui/tauri.conf.json`.
+  3. *H3 (Medio - System Tray Dinámico):*
+     - Todos los auditores señalaron que el System Tray no actualizaba el porcentaje de batería ni el tooltip tras el arranque.
+     - **Solución:** Asignado ID canónico `"main-tray"` en `TrayIconBuilder`, retenida referencia de `MenuItem` (`battery_item`) y cableada sincronización reactiva en `poller.rs` (`update_tray_status` y `update_tray_error`), reflejando porcentaje en tiempo real, estado de carga y tooltip contextual.
+  4. *H7 / B-1 (Higiene y Honestidad de Diagnóstico):*
+     - Eliminado método muerto no utilizado `DaemonClient::start_systemd_service`.
+     - `read_own_rss_kb` en `commands.rs` ahora devuelve `Err` en vez de `Ok(0)` si falta `VmRSS`.
+     - Agregada clase `group` al botón de `ActionPicker.svelte` para activar la transición `group-hover:opacity-100`.
+     - Eliminada importación huérfana de `derived` en `stores.js`.
+  5. *Clarificación Honesta de la Especificación de Memoria (`specs/F4-gui-tauri.md`):*
+     - Ajustado el presupuesto de memoria para distinguir la realidad de Linux: Daemon RSS < 5 MB (real: 2.3 MB), Binario GUI < 15 MB stripped (real: 10.5 MB), y entorno compartido WebKitGTK runtime < 250 MB PSS (real: ~230 MB).
+- **Mejora y Blindaje de Scripts Multi-Agente (Anti-Loop):**
+  - Identificada la causa de repetición de tablas en terminal interactiva: sondeo ciego cada 5s sin cursor in-place ni filtrado de eventos.
+  - Reescribió el monitor en vivo con patrón basado en eventos (`declare -A prev_status`), latido discreto de 1 línea cada 30s y tabla consolidada impresa una única vez al terminar.
+  - Creada plantilla canónica versionada en [`scripts/templates/template-tanda.sh`](file:///home/panxio/Projects/mx-options-linux/scripts/templates/template-tanda.sh).
+  - Protocolo documentado en [`docs/SUBAGENTES.md`](file:///home/panxio/Projects/mx-options-linux/docs/SUBAGENTES.md).
+- **Verificación de Árbitros Objetivos:**
+  - `cargo test --workspace`: **36 passed / 0 failed** ✅
+  - `cargo clippy --workspace --all-targets -- -D warnings`: **0 warnings** ✅
+  - `cargo build --release -p mx-gui`: **Compilado OK en 19.7s** (Binario stripped: 11 MB) ✅
+  - `npm --prefix crates/mx-gui/ui run build`: **0 errores** (CSS: 32 KB raw / 6.19 KB gzip; JS: 68 KB raw / 24 KB gzip) ✅
+- **Estado:** ✅ **FASE 4 OFICIALMENTE CERRADA Y APROBADA**. Lista para iniciar **Fase 5: Empaquetado (.deb) y Distribución Limpia**.
 
 

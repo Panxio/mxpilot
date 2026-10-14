@@ -108,7 +108,7 @@ fn read_own_rss_kb() -> Result<u64, String> {
             }
         }
     }
-    Ok(0)
+    Err("Campo VmRSS no encontrado en /proc/self/status".into())
 }
 
 #[cfg(test)]

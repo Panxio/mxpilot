@@ -1,1 +1,1 @@
-{}
+{"default":{"identifier":"default","description":"Default capabilities for the main window of mx-gui","local":true,"windows":["main"],"permissions":["core:default"]}}
