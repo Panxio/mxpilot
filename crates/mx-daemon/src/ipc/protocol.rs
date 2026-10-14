@@ -32,6 +32,7 @@ pub enum ActionPayload {
         button: String,
     },
     None,
+    SystemDefault,
 }
 
 impl ActionPayload {
@@ -59,6 +60,7 @@ impl ActionPayload {
                 Ok(Action::MouseButton(code))
             }
             Self::None => Ok(Action::None),
+            Self::SystemDefault => Ok(Action::None),
         }
     }
 

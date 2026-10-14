@@ -29,6 +29,7 @@ pub enum DaemonCommand {
     SetAction {
         cid: u16,
         action: Action,
+        divert: bool,
         reply: SyncSender<Result<(), String>>,
     },
     RefreshBattery {
@@ -294,15 +295,22 @@ pub fn run_hid_worker(
             // Atender comandos IPC
             while let Ok(cmd) = cmd_receiver.try_recv() {
                 match cmd {
-                    DaemonCommand::SetAction { cid, action: _, reply } => {
+                    DaemonCommand::SetAction { cid, action: _, divert, reply } => {
                         if is_valid_cid(cid) {
-                            let res = device.set_cid_divert(cid, true).map_err(|e| e.to_string());
+                            let res = device.set_cid_divert(cid, divert).map_err(|e| e.to_string());
                             if res.is_ok() {
-                                active_diverted_cids.insert(cid);
-                                tracked_pressed.entry(cid).or_insert(None);
                                 let mut s = state.write().unwrap();
-                                if !s.diverted_cids.contains(&cid) {
-                                    s.diverted_cids.push(cid);
+                                if divert {
+                                    active_diverted_cids.insert(cid);
+                                    tracked_pressed.entry(cid).or_insert(None);
+                                    if !s.diverted_cids.contains(&cid) {
+                                        s.diverted_cids.push(cid);
+                                    }
+                                } else {
+                                    active_diverted_cids.remove(&cid);
+                                    tracked_pressed.remove(&cid);
+                                    s.diverted_cids.retain(|&c| c != cid);
+                                    s.mapping.remove(&cid);
                                 }
                             }
                             let _ = reply.send(res);

@@ -286,6 +286,9 @@ impl IpcServer {
                     return IpcResponse::error(req_id, format!("CID 0x{:04X} no es reprogramable", cid));
                 }
 
+                let is_default = matches!(action, ActionPayload::SystemDefault);
+                let divert = !is_default;
+
                 let act = match action.to_action() {
                     Ok(a) => a,
                     Err(e) => return IpcResponse::error(req_id, e),
@@ -296,6 +299,7 @@ impl IpcServer {
                 let cmd = DaemonCommand::SetAction {
                     cid,
                     action: act,
+                    divert,
                     reply: reply_tx,
                 };
 
@@ -304,7 +308,12 @@ impl IpcServer {
                         Ok(Ok(())) => {
                             // Actualizar mapeo en memoria exclusivamente tras éxito verificado en hardware
                             let mut s = self.state.write().unwrap();
-                            s.mapping.insert(cid, action);
+                            if is_default {
+                                s.mapping.remove(&cid);
+                                s.diverted_cids.retain(|&c| c != cid);
+                            } else {
+                                s.mapping.insert(cid, action);
+                            }
                             IpcResponse::ok_empty(req_id)
                         }
                         Ok(Err(e)) => IpcResponse::error(req_id, e),

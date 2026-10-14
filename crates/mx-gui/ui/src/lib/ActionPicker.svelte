@@ -53,6 +53,13 @@
       payload: { type: 'None' },
       icon: '⊘',
     },
+    {
+      id: 'default',
+      label: 'Función de Fábrica (Navegación / Clic Nativo)',
+      desc: 'Restaura el control del hardware nativo (ej. Atrás/Adelante en Chrome/Firefox, clic central).',
+      payload: { type: 'SystemDefault' },
+      icon: '↺',
+    },
   ];
 
   let selectedButtonDef;
@@ -63,12 +70,19 @@
   $: currentAction = getActionForCid($statusData.mapping, $selectedCid);
   $: isDefaultSystem = !currentAction;
 
+  function isPresetActive(preset, current) {
+    if (preset.payload.type === 'SystemDefault') {
+      return !current;
+    }
+    return isActionEqual(current, preset.payload);
+  }
+
   // Lista reactiva ordenada: la acción actualmente activa se despliega primero
   let sortedPresets = PRESET_ACTIONS;
   $: {
     sortedPresets = [...PRESET_ACTIONS].sort((a, b) => {
-      const aActive = isActionEqual(currentAction, a.payload);
-      const bActive = isActionEqual(currentAction, b.payload);
+      const aActive = isPresetActive(a, currentAction);
+      const bActive = isPresetActive(b, currentAction);
       if (aActive && !bActive) return -1;
       if (!aActive && bActive) return 1;
       return 0;
@@ -129,7 +143,7 @@
   <!-- Lista de acciones permitidas estilo Libadwaita Cards -->
   <div class="flex-1 overflow-y-auto space-y-2 pr-1">
     {#each sortedPresets as preset (preset.id)}
-      {@const isActive = isActionEqual(currentAction, preset.payload)}
+      {@const isActive = isPresetActive(preset, currentAction)}
       <button
         type="button"
         disabled={$isPendingAction || $uiState !== 'Connected'}

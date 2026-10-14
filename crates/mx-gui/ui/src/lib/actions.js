@@ -67,6 +67,7 @@ export function isActionEqual(a, b) {
     case 'MouseButton':
       return String(a.button).trim() === String(b.button).trim();
     case 'None':
+    case 'SystemDefault':
       return true;
     default:
       return false;
