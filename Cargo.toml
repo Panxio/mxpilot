@@ -5,6 +5,7 @@ members = [
     "crates/mx-uinput",
     "crates/mx-cli",
     "crates/mx-daemon",
+    "crates/mx-gui",
 ]
 resolver = "2"
 
