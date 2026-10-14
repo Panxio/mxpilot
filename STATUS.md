@@ -348,4 +348,35 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
   - `npm --prefix crates/mx-gui/ui run build`: **0 errores** (CSS: 32 KB raw / 6.19 KB gzip; JS: 68 KB raw / 24 KB gzip) ✅
 - **Estado:** ✅ **FASE 4 OFICIALMENTE CERRADA Y APROBADA**. Lista para iniciar **Fase 5: Empaquetado (.deb) y Distribución Limpia**.
 
+---
+
+### Sesión 11 (2026-10-14) — Prueba E2E Manual en Escritorio, Resolución Colegiada de Defectos Visuales y Blindaje de Modelos
+- **Prueba End-to-End en Escritorio Real (3 Monitores / Wayland):**
+  - El usuario realizó la verificación manual en vivo del frontend y reportó 6 observaciones visuales y de integración con el escritorio:
+    1. *Lanzador GNOME / Dash:* Icono genérico del sistema en lugar de la identidad visual de la app.
+    2. *Geometría / Layout:* Ventana de 760x540 colapsaba verticalmente debido al breakpoint `md:` (768px) de Tailwind, apretando el SVG y las opciones de botones.
+    3. *System Tray:* Despliegue de menú contextual y porcentaje confirmados operativos.
+    4. *Blueprint SVG:* Interacción e iluminación azul de botones confirmada operativa.
+    5. *Reconciliación de Acciones:* Al asignar `Super`, la acción se ejecutaba en hardware pero la UI no mostraba el badge "Activo" y mantenía "Deshabilitar botón" seleccionado.
+    6. *Modal de Telemetría:* El botón se llamaba "Salud" en vez de "Diagnóstico"; faltaba botón de copia rápida de métricas.
+- **Tanda Colegiada Multi-Agente (Revisión Crítica del Plan):**
+  - Plan de mejora sometido a los 4 subagentes (`haiku`, `deepseek`, `muse`, `luna`) mediante `scripts/run-f4-plan-mejora-tanda.sh`.
+  - Consenso unánime en:
+    - `actions.js`: comparador canónico inmune al orden de claves JSON, alias `SUPER` == `META` == `KEY_LEFTMETA` y orden de modificadores.
+    - Geometría fija de 2 columnas `960x620` (`minWidth: 840`, `minHeight: 520`, resizable).
+    - Iconografía Hicolor multiplataforma con SVG vector oficial y assets PNG escalados (16 a 512 px) con `gtk-update-icon-cache`.
+    - Modal de diagnóstico enriquecido con botón de copia formateada con timestamp.
+- **Blindaje del Catálogo de Subagentes y Runner:**
+  - Identificado modelo no existente `opencode-go/muse-spark-1.3` en OpenCode; corregido por la variante oficial `opencode-go/muse-spark-1.3-contributor` y registrado en `docs/SUBAGENTES.md`.
+  - Corregido aborto de subshell bajo `set -e` mediante captura atómica `local code=0; systemd-run ... || code=$?`, eliminando cuelgues de latido infinito.
+- **Implementación y Verificación de Árbitros Objetivos:**
+  - Suite unitaria frontend en Node.js (`crates/mx-gui/ui/tests/actions.test.js`): **12/12 tests pasando en verde** ✅
+  - `cargo test --workspace`: **36 tests pasando (0 fallos)** ✅
+  - `cargo clippy --workspace --all-targets -- -D warnings`: **0 warnings** ✅
+  - `npm --prefix crates/mx-gui/ui run build`: **0 errores** ✅
+  - `cargo build --release -p mx-gui`: **Compilado OK en 25.7s (14 MB)** ✅
+  - Instalado en `~/.local/bin/mx-gui` y desplegado en vivo para verificación del usuario.
+- **Estado:** ✅ **E2E Visual y Desktop Integration verificado y listo para Fase 5**.
+
+
 
