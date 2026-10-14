@@ -6,17 +6,18 @@
 > Creado: 2026-10-13
 
 > ### 📌 RESUMEN EJECUTIVO DE RELEVO RÁPIDO (LEER AL INICIAR SESIÓN)
-> - **Última Sesión Cerrada:** Sesión 7 (Fase 3: Daemon `systemd --user` & Socket IPC (`mx-daemon`)). Commit: `c19d592`.
+> - **Última Sesión Cerrada:** Sesión 8 (Apertura Fase 4: GUI Tauri v2 & System Tray — Revisión Colegiada Completada).
 > - **Fases Aprobadas:**
 >   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-probe`) — Kill-gate superado.
 >   - ✅ **Fase 1:** Divert de Botón Superior & Inyección Virtual (`mx-uinput`, `mx-cli`) — RAII y Down/Up verificado.
 >   - ✅ **Fase 2:** Reglas `udev` (`70-mx-options.rules`) — Permisos de usuario sin `sudo`.
 >   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS 3.3 MB (<15 MB), parada limpia <0.1 s, fail-safe Zero Stuck Keys verificado, auditoría colegiada de 4 subagentes superada.
-> - **Siguiente Fase:** **Fase 4: GUI Tauri v2 (Svelte + Tailwind & System Tray)**.
+> - **Fase en Progreso:** **Fase 4: GUI Tauri v2 (Svelte + Tailwind & System Tray)**.
 > - **Acción Inmediata al Retomar:**
->   1. Consultar la Sección 8 para ver la arquitectura acordada de la GUI Tauri v2 (Backend Rust `UnixStream` con `#[tauri::command]` + Frontend Svelte).
->   2. Redactar especificación inicial SDD en `specs/F4-gui-tauri.md`.
->   3. Despachar la tanda colegiada a los 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) mediante `scripts/run-dev.sh` antes de codificar.
+>   1. Inicializar el crate `crates/mx-gui` en el workspace de Cargo y configurar Tauri v2 (`Cargo.toml`, `tauri.conf.json`).
+>   2. Implementar `client.rs` (cliente IPC bounded con deadline en `spawn_blocking`) y arnés TDD `tests/client_mock_test.rs`.
+>   3. Implementar comandos asíncronos `commands.rs`, motor de sondeo `poller.rs` y System Tray `tray.rs`.
+>   4. Montar frontend Svelte + Tailwind en `crates/mx-gui/ui`.
 
 ---
 
@@ -106,7 +107,7 @@ Fase 0: Sonda & Protocolo (mx-probe)   [█████████████�
 Fase 1: Divert & uinput (mx-cli)       [████████████████████]  APROBADO (uinput + RAII verificado)
 Fase 2: Permisos udev                  [████████████████████]  Reglas instaladas y funcionales
 Fase 3: Daemon systemd & IPC           [████████████████████]  APROBADO (Daemon, IPC & Audit verificado)
-Fase 4: GUI Tauri v2 (Svelte)          [░░░░░░░░░░░░░░░░░░░░]  Siguiente paso (Tray & remapeador)
+Fase 4: GUI Tauri v2 (Svelte)          [██████░░░░░░░░░░░░░░]  En progreso (Revisión colegiada aprobada)
 Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░░░░░░░░]  Distribución limpia
 ```
 
@@ -259,21 +260,43 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
   - Tiempo de parada limpia ante SIGTERM: **< 0.1 s** (meta: < 2 s).
 - **Estado:** Fase 3 **APROBADA Y CERRADA**.
 
+### 2026-10-13 — Sesión 8: Apertura de Fase 4 (GUI Tauri v2), Revisión Colegiada y Consolidación (Gemini 3.8 Flash High)
+- **Apertura de Fase 4:**
+  - Redacción inicial de la especificación técnica en `specs/F4-gui-tauri.md`.
+  - Creación del plan de implementación y arquitectura en el artefacto `f4_gui_tauri_plan.md`.
+- **Tanda Obligatoria de Revisión Colegiada (4 Subagentes):**
+  - Despachada mediante `scripts/run-f4-review-tanda.sh` bajo `systemd-run -p MemoryMax=2G`, `< /dev/null` con concurrencia máxima de 2 puestos.
+  - Modelos revisores: `opencode-go/deepseek-v4.1-flash`, `opencode-go/claude-haiku-5-5`, `opencode-go/muse-spark-1.3-contributor`, `gpt-6-luna`.
+  - Reportes técnicos completos (>54.000 caracteres) archivados en `.superpowers/review_f4/reports/`.
+- **Consensos Técnicos Críticos Integrados en `specs/F4-gui-tauri.md`:**
+  1. *Comandos Tauri Asíncronos:* Todos los `#[tauri::command]` son `async fn` delegando el IO de socket a `tauri::async_runtime::spawn_blocking`, evitando congelar el event loop de GTK (Zero Hang UI).
+  2. *Cliente IPC Bounded con Deadline:* Conexión no bloqueante con `poll` (timeout 500 ms) + R/W acotado por clase (FAST 1.5 s, SLOW 2.5 s) + `take(64 KB + 1)` para evitar desbordes de memoria.
+  3. *Máquina de Estados de 4 Vías en UI (Regla de Oro - Cero Falso Verde):* Distinción clara entre `Connecting`, `Connected` (activo en hardware), `DaemonDown` (transporte caído) y `DeviceDisconnected` (mouse apagado/fuera de rango BT con mapeos atenuados *stale-while-revalidate*).
+  4. *Motor Central de Polling en Rust:* Una tarea en segundo plano en Rust gobierna la cadencia (10 s visible / 60 s oculta en tray), actualiza el tray y emite eventos `status-changed` tipados al frontend.
+  5. *System Tray Tolerante a Fallos:* Creación fallible para compatibilidad en GNOME Wayland sin AppIndicator (continúa en modo ventana sin crashear); intercepción de cierre con `api.prevent_close()` y `window.hide()`.
+  6. *Invocación Segura de `systemctl`:* Argumentos fijos `Command::new("/usr/bin/systemctl").args(["--user", "start", "mx-options.service"])` con `Stdio::null()` y verificación de disponibilidad mediante `ping` con backoff.
+  7. *Medición Honesta de Recursos:* Medición integral del árbol de procesos (`mx-gui` + `WebKitWebProcess` + `WebKitNetworkProcess`) vía cgroup `memory.current` con script dedicado `scripts/measure-gui.sh`.
+- **Estado:** Especificación y plan blindados. Lista para iniciar scaffolding de `crates/mx-gui`.
+
 ---
 
-## 8. Instrucciones Detalladas para la Siguiente Fase (Fase 4: GUI Tauri v2 & Tray)
+## 8. Instrucciones Detalladas para la Implementación de Fase 4 (GUI Tauri v2 & Tray)
 
-### Contexto y Arquitectura Recomendada por los Subagentes
-- **Backend Tauri v2 (Rust):**
-  - Módulo cliente IPC en Rust (`std::os::unix::net::UnixStream`, sincrónico y sin runtime pesado tipo tokio) que interactúa con `$XDG_RUNTIME_DIR/mx-options.sock`.
-  - Comandos Tauri (`#[tauri::command]`): `get_status`, `get_health`, `get_battery`, `set_action`.
-  - El frontend web NUNCA interactúa directamente con el socket ni con el hardware; toda la interacción pasa por comandos tipados de Tauri.
-- **Frontend (Svelte + Tailwind):**
-  - Vista ultra-delgada, minimalista y reactiva.
-  - System Tray con ícono de estado de conexión y nivel de batería.
-  - Selector intuitivo de acciones para el botón superior (`0x00FD`): Super/Meta, Copiar, Pegar, Mute, Play/Pause, atajo de teclado personalizado.
-  - Consumo de telemetría a bajo ritmo (polling cada 30-60 s para no despertar innecesariamente al CPU).
-- **Protocolo de Inicio Obligatorio de Fase 4:**
-  1. Elaborar la especificación inicial SDD en `specs/F4-gui-tauri.md`.
-  2. Despachar la tanda de revisión colegiada a los 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) mediante `scripts/run-dev.sh`.
-  3. Integrar consensos antes de iniciar el scaffolding frontend.
+### Pasos de Ejecución Inmediatos:
+1. **Creación del Crate `crates/mx-gui`:**
+   - Registrar `crates/mx-gui` en `Cargo.toml` raíz.
+   - Configurar `crates/mx-gui/Cargo.toml` con dependencias Tauri v2 (`tauri`, `tauri-build`, `tauri-plugin-single-instance`, `serde`, `serde_json`, `thiserror`, `log`).
+   - Crear `tauri.conf.json` con configuración de ventana (760x540), identificador único, plugins y tray icon.
+2. **Implementación del Backend Rust (`crates/mx-gui/src/`):**
+   - `client.rs`: Cliente IPC sincrónico con conexión no bloqueante, deadline, timeouts FAST/SLOW y `Read::take(64 KB)`.
+   - `tests/client_mock_test.rs`: Arnés de pruebas con mock `UnixListener` validando timeouts, EOF, rechazo de payloads >64 KB y estados de error.
+   - `commands.rs`: Comandos `async fn` en `spawn_blocking`.
+   - `poller.rs`: Motor de sondeo Rust que emite eventos `status-changed` y actualiza el tray.
+   - `tray.rs`: Gestión del tray icon y menú contextual.
+3. **Scaffolding del Frontend (`crates/mx-gui/ui/`):**
+   - Configuración de Vite + Svelte + Tailwind.
+   - Implementación de stores (`UiState` de 4 vías) y componentes: `MouseViewer`, `ActionPicker`, `BatteryBadge`, `HealthModal`.
+4. **Verificación y Medición:**
+   - `cargo test -p mx-gui` y `cargo clippy -- -D warnings`.
+   - Script `scripts/measure-gui.sh` para verificar RAM total < 80 MB con ventana abierta y < 35 MB en tray.
+
