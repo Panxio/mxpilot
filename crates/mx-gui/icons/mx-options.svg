@@ -1,32 +1,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Contenedor oscuro estándar FreeDesktop/Lekto -->
-  <rect width="512" height="512" rx="112" ry="112" fill="#151b23"/>
+  <!-- Fondo Squircle Verde Esmeralda Sólido Vibrante (#059669, contraste 5.2:1 contra dock #1e1e1e) -->
+  <rect width="512" height="512" rx="112" ry="112" fill="#059669"/>
 
-  <!-- Silueta ergonómica maciza en blanco puro (#ffffff, contraste 17.5:1) -->
-  <path d="M 120 416 
-           C 95 416 88 380 110 320 
-           C 145 220 185 140 220 96 
-           C 235 78 265 78 295 92 
-           C 335 112 375 180 400 270 
-           C 420 340 420 416 380 416 
-           Z" fill="#ffffff"/>
+  <!-- Monograma MX plano, limpio, sin sombras, en blanco puro (#ffffff) -->
+  <g fill="#ffffff">
+    <!-- Letra M (X: 86 a 246, ancho 160) -->
+    <path d="M 86 356 
+             L 86 156 
+             L 126 156 
+             L 166 256 
+             L 206 156 
+             L 246 156 
+             L 246 356 
+             L 208 356 
+             L 208 220 
+             L 178 300 
+             L 154 300 
+             L 124 220 
+             L 124 356 
+             Z"/>
 
-  <!-- Placa ergonómica de cúspide a 57° en Verde Esmeralda Vibrante (#10b981) -->
-  <path d="M 220 96 
-           C 235 78 265 78 295 92 
-           L 275 140 
-           C 255 130 235 125 210 135 
-           Z" fill="#10b981"/>
-
-  <!-- Monograma MX troquelado en el cuerpo (#151b23) para máxima legibilidad -->
-  <g fill="#151b23">
-    <!-- Letra M -->
-    <path d="M 160 380 L 160 230 L 195 230 L 225 310 L 255 230 L 290 230 L 290 380 L 260 380 L 260 280 L 235 345 L 215 345 L 190 280 L 190 380 Z"/>
-    <!-- Letra X -->
-    <path d="M 305 230 L 335 230 L 365 295 L 395 230 L 425 230 L 385 305 L 425 380 L 395 380 L 365 315 L 335 380 L 305 380 L 345 305 Z"/>
+    <!-- Letra X (X: 266 a 426, ancho 160, 20px de separación limpia) -->
+    <path d="M 266 156 
+             L 306 156 
+             L 346 236 
+             L 386 156 
+             L 426 156 
+             L 366 256 
+             L 426 356 
+             L 386 356 
+             L 346 276 
+             L 306 356 
+             L 266 356 
+             L 326 256 
+             Z"/>
   </g>
 
-  <!-- Botón superior circular en Verde Esmeralda (#10b981) -->
-  <circle cx="260" cy="112" r="12" fill="#059669"/>
-  <circle cx="260" cy="112" r="7" fill="#34d399"/>
+  <!-- Acento ergonómico superior de cresta en verde menta claro (#a7f3d0) -->
+  <circle cx="410" cy="140" r="16" fill="#a7f3d0"/>
+  <circle cx="410" cy="140" r="8" fill="#047857"/>
 </svg>
