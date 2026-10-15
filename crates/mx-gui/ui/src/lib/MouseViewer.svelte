@@ -54,31 +54,55 @@
   <div class="w-full max-w-[360px] aspect-[360/300] my-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 {$uiState !== 'Connected' ? 'opacity-40 grayscale-[40%]' : ''}">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" width="100%" height="100%" class="overflow-visible select-none">
       <defs>
-        <!-- Gradiente para el chasis principal oscuro -->
-        <linearGradient id="chassisGrad" x1="15%" y1="15%" x2="85%" y2="85%">
+        <!-- Sombra ambiental suave -->
+        <radialGradient id="floor-shadow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#020617" stop-opacity="0.7" />
+          <stop offset="65%" stop-color="#020617" stop-opacity="0.25" />
+          <stop offset="100%" stop-color="#020617" stop-opacity="0" />
+        </radialGradient>
+
+        <!-- Cuerpo principal (cavidad ergonómica del pulgar) -->
+        <linearGradient id="body-grad" x1="15%" y1="15%" x2="85%" y2="85%">
+          <stop offset="0%" stop-color="#334155" />
+          <stop offset="38%" stop-color="#1e293b" />
+          <stop offset="80%" stop-color="#0f172a" />
+          <stop offset="100%" stop-color="#090d16" />
+        </linearGradient>
+
+        <!-- Faldón / Base inferior -->
+        <linearGradient id="skirt-grad" x1="0%" y1="0%" x2="100%" y2="40%">
           <stop offset="0%" stop-color="#1e293b" />
-          <stop offset="50%" stop-color="#1e293b" />
+          <stop offset="45%" stop-color="#0f172a" />
+          <stop offset="100%" stop-color="#060911" />
+        </linearGradient>
+
+        <!-- Botones principales en escorzo (perfil izquierdo) -->
+        <linearGradient id="island-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#475569" />
+          <stop offset="50%" stop-color="#263346" />
           <stop offset="100%" stop-color="#0f172a" />
         </linearGradient>
 
-        <!-- Gradiente para la base y sombras de oclusión -->
-        <linearGradient id="baseShadowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#090d16" />
-          <stop offset="100%" stop-color="#05070a" />
+        <!-- Placa superior de aluminio anodizado -->
+        <linearGradient id="metal-top" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#94a3b8" />
+          <stop offset="45%" stop-color="#cbd5e1" />
+          <stop offset="80%" stop-color="#f1f5f9" />
+          <stop offset="100%" stop-color="#94a3b8" />
         </linearGradient>
 
-        <!-- Gradiente de la placa metálica de la cúspide (aluminio) -->
-        <linearGradient id="metalPlateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#cbd5e1" />
-          <stop offset="30%" stop-color="#94a3b8" />
-          <stop offset="70%" stop-color="#64748b" />
-          <stop offset="100%" stop-color="#475569" />
+        <!-- Bisel lateral de la placa de aluminio -->
+        <linearGradient id="metal-side" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#475569" />
+          <stop offset="30%" stop-color="#cbd5e1" />
+          <stop offset="65%" stop-color="#94a3b8" />
+          <stop offset="100%" stop-color="#334155" />
         </linearGradient>
 
-        <!-- Gradiente normal interactivo (indigo) -->
-        <linearGradient id="interactiveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#818cf8" />
-          <stop offset="100%" stop-color="#4f46e5" />
+        <!-- Gradiente interactivo estándar para botones -->
+        <linearGradient id="interactive-btn" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#1e293b" />
+          <stop offset="100%" stop-color="#0f172a" />
         </linearGradient>
 
         <!-- Gradiente botón activo seleccionado (cyan vibrante) -->
@@ -87,173 +111,279 @@
           <stop offset="100%" stop-color="#0284c7" />
         </linearGradient>
 
-        <!-- Filtro de resplandor suave -->
-        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="3.5" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        <!-- Gradiente para las estrías de goma del pulgar -->
+        <linearGradient id="ridge-grad" x1="0%" y1="0%" x2="25%" y2="100%">
+          <stop offset="0%" stop-color="#64748b" stop-opacity="0.1" />
+          <stop offset="45%" stop-color="#94a3b8" stop-opacity="0.38" />
+          <stop offset="85%" stop-color="#475569" stop-opacity="0.22" />
+          <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+        </linearGradient>
+
+        <!-- Sombra suave para dar relieve a las estrías -->
+        <linearGradient id="ridge-dark" x1="0%" y1="0%" x2="25%" y2="100%">
+          <stop offset="0%" stop-color="#020617" stop-opacity="0" />
+          <stop offset="45%" stop-color="#020617" stop-opacity="0.55" />
+          <stop offset="85%" stop-color="#020617" stop-opacity="0.35" />
+          <stop offset="100%" stop-color="#020617" stop-opacity="0" />
+        </linearGradient>
+
+        <!-- Resplandor sutil para elementos interactivos -->
+        <filter id="interactive-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#60a5fa" flood-opacity="0.35" />
         </filter>
 
-        <filter id="selectedGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="5" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        <!-- Resplandor intenso de selección activa -->
+        <filter id="selectedGlow" x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="0" stdDeviation="4.5" flood-color="#38bdf8" flood-opacity="0.85" />
         </filter>
       </defs>
 
-      <!-- 0. Base oscura de apoyo y Oclusión -->
-      <path d="M 50,278 
-               C 50,278 120,290 280,285
-               C 295,285 305,280 295,274
-               C 285,268 250,268 210,268
-               C 170,268 85,270 50,274
-               Z" 
-            fill="#05070a" opacity="0.65" />
+      <!-- Sombra de apoyo sobre la superficie -->
+      <ellipse cx="185" cy="276" rx="142" ry="12" fill="url(#floor-shadow)" />
 
-      <!-- 1. Chasis Base (Grip inferior y borde inferior izquierdo) -->
-      <path d="M 46,260 
-               L 48,274 
-               C 48,278 54,282 62,282 
-               L 278,282 
-               C 284,282 292,279 292,274 
-               L 294,264 
-               C 294,264 220,274 140,273
-               C 80,272 46,260 46,260 Z" 
-            fill="url(#baseShadowGrad)" stroke="#1e293b" stroke-width="1.5" />
-
-      <!-- 2. Cuerpo Principal Ergonomía (Chasis de 57 Grados) -->
-      <path id="chassis-main" 
-            d="M 46,260 
-               C 43,250 50,240 55,228
-               C 70,195 105,135 125,103
-               C 130,95 135,92 143,88
-               L 218,52
-               C 225,48 230,48 235,51
-               L 242,56
-               C 246,62 245,68 243,72
-               C 235,90 238,105 244,120
-               C 255,145 275,175 295,188
-               C 310,198 322,204 322,212
-               L 322,215
-               C 322,222 300,245 294,264
-               C 292,268 280,266 270,266
-               C 210,265 110,264 46,260 Z" 
-            fill="url(#chassisGrad)" stroke="#334155" stroke-width="1.2" />
-
-      <!-- 3. Placa de Cúspide Metálica con Botón Superior (DPI / 0x00FD) -->
-      <g id="top-plate">
-        <path d="M 125,103 
-                 C 127,97 132,92 140,88
-                 L 218,52
-                 C 225,48 229,48 234,51
-                 L 242,56
-                 C 245,61 243,65 240,68
-                 L 142,106
-                 C 134,109 127,108 125,103 Z" 
-              fill="url(#metalPlateGrad)" stroke="#e2e8f0" stroke-width="0.8" />
-        
-        <!-- Bisel interior de la placa metálica -->
-        <path d="M 128,100 C 132,95 138,91 142,89 L 216,55 C 221,52 225,52 228,54" 
-              fill="none" stroke="#f1f5f9" stroke-width="0.7" opacity="0.9" />
-
-        <!-- Botón de Conmutación DPI (id="svg-btn-top", CID 0x00FD) -->
-        <g class="cursor-pointer group" on:click={() => selectButton(0x00FD)} on:keydown={(e) => handleKeyDown(e, 0x00FD)} role="button" tabindex="0" aria-label="Botón Superior DPI">
-          <ellipse cx="218" cy="63" rx="16" ry="9" transform="rotate(-23, 218, 63)"
-                   fill={$selectedCid === 0x00FD ? 'url(#selectedGrad)' : 'url(#interactiveGrad)'} 
-                   stroke={$selectedCid === 0x00FD ? '#38bdf8' : '#818cf8'} 
-                   stroke-width={$selectedCid === 0x00FD ? 2.4 : 1.2}
-                   filter={$selectedCid === 0x00FD ? 'url(#selectedGlow)' : ''}
-                   class="transition-all duration-200 group-hover:brightness-125" />
-          <ellipse cx="218" cy="62" rx="12" ry="6" transform="rotate(-23, 218, 62)"
-                   fill="#ffffff" opacity={$selectedCid === 0x00FD ? 0.35 : 0.15} pointer-events="none" />
+      <!-- ==================== 1. RUEDA DE SCROLL (CID 0x0052) ==================== -->
+      <g class="cursor-pointer group" on:click={() => selectButton(0x0052)} on:keydown={(e) => handleKeyDown(e, 0x0052)} role="button" tabindex="0" aria-label="Rueda Central Scroll">
+        <g id="svg-btn-wheel" filter={$selectedCid === 0x0052 ? 'url(#selectedGlow)' : 'url(#interactive-glow)'} class="transition-all duration-200 group-hover:brightness-125">
+          <!-- Arco compacto que asoma discretamente por el perfil izquierdo -->
+          <path d="M 97,134 
+                   C 92,129 98,113 107,113 
+                   L 113,117 
+                   L 102,138 
+                   Z" 
+                fill={$selectedCid === 0x0052 ? 'url(#selectedGrad)' : 'url(#interactive-btn)'} 
+                stroke={$selectedCid === 0x0052 ? '#38bdf8' : '#60a5fa'} 
+                stroke-width={$selectedCid === 0x0052 ? 2.2 : 1.4} 
+                stroke-linejoin="round" />
+          <!-- Textura ranurada fina del scroll -->
+          <path d="M 96,129 L 101,132 
+                   M 96.5,125 L 102,128 
+                   M 98,121 L 103.5,124 
+                   M 100.5,117.5 L 106,120.5 
+                   M 104,115 L 108.5,117.5" 
+                stroke={$selectedCid === 0x0052 ? '#e0f2fe' : '#818cf8'} 
+                stroke-width="0.95" stroke-linecap="round" opacity="0.85" />
+          <!-- Borde interior luminoso -->
+          <path d="M 97.5,132 C 93.8,128 99,115 106.5,114.5" fill="none" stroke="#93c5fd" stroke-width="0.75" opacity="0.8" stroke-linecap="round" />
         </g>
       </g>
 
-      <!-- 4. Rueda de Scroll Frontal (CID 0x0052) -->
-      <g class="cursor-pointer group" on:click={() => selectButton(0x0052)} on:keydown={(e) => handleKeyDown(e, 0x0052)} role="button" tabindex="0" aria-label="Rueda Central">
-        <path d="M 103,132 
-                 C 99,138 98,145 99,152 
-                 C 101,153 103,153 104,151 
-                 C 106,145 106,137 104,131 Z" 
-              fill={$selectedCid === 0x0052 ? 'url(#selectedGrad)' : 'url(#interactiveGrad)'} 
-              stroke={$selectedCid === 0x0052 ? '#38bdf8' : '#60a5fa'} 
-              stroke-width={$selectedCid === 0x0052 ? 2.2 : 1}
-              filter={$selectedCid === 0x0052 ? 'url(#selectedGlow)' : ''}
-              class="transition-all duration-200 group-hover:brightness-125" />
-        <!-- Muescas de la rueda -->
-        <line x1="100.5" y1="135" x2="103.5" y2="136" stroke="#e0e7ff" stroke-width="0.8" />
-        <line x1="99.2" y1="140" x2="102.5" y2="141" stroke="#e0e7ff" stroke-width="0.8" />
-        <line x1="99" y1="145" x2="102.2" y2="146" stroke="#e0e7ff" stroke-width="0.8" />
-        <line x1="99.5" y1="150" x2="102.5" y2="151" stroke="#e0e7ff" stroke-width="0.8" />
+      <!-- ==================== 2. RAMPA FRONTAL (ÁNGULO DE 57°) ==================== -->
+      <g id="front-button-island">
+        <path d="M 136,68 C 112,99 88,142 69,193 L 89,192 C 107,145 129,103 151,72 Z" fill="url(#island-grad)" stroke="#475569" stroke-width="1" stroke-linejoin="round" />
+        <!-- Borde de luz en el filo frontal de 57 grados -->
+        <path d="M 136,69 C 112,100 88,142 70,192" fill="none" stroke="#94a3b8" stroke-width="1" opacity="0.45" />
+        <!-- Hendidura divisoria entre los dos clics principales -->
+        <path d="M 94,137 C 100,142 106,146 112,149" fill="none" stroke="#090d16" stroke-width="2" stroke-linecap="round" />
+        <path d="M 93.5,138.6 C 99.5,143.6 105.5,147.6 111.5,150.6" fill="none" stroke="#64748b" stroke-width="0.75" opacity="0.55" stroke-linecap="round" />
       </g>
 
-      <!-- 5. Cortes de Piezas del Frontal (Estilo de Ingeniería) -->
-      <path d="M 125,103 C 110,135 78,190 54,230" fill="none" stroke="#0f172a" stroke-width="1.8" opacity="0.9" />
-      <path d="M 54,230 C 58,231 66,233 75,234 C 84,235 95,231 99,230" fill="none" stroke="#0f172a" stroke-width="1" opacity="0.6" />
-      <path d="M 78,190 C 86,192 100,195 110,193 C 120,190 125,185 125,185" fill="none" stroke="#0f172a" stroke-width="1.2" opacity="0.75" />
+      <!-- ==================== 3. CHASIS PRINCIPAL Y ALA DEL PULGAR ==================== -->
+      <g id="main-chassis">
+        <!-- Escultura principal con caída cóncava para el reposo del pulgar -->
+        <path d="M 151,72 
+                 L 164,77 
+                 C 170,80 177,80 184,77 
+                 L 234,54 
+                 C 242,96 259,154 312,188 
+                 C 314,190 315,192 314,194 
+                 L 86,238 
+                 L 56,238 
+                 C 59,221 63,207 69,193 
+                 L 89,192 
+                 C 107,145 129,103 151,72 Z" fill="url(#body-grad)" stroke="#334155" stroke-width="1" stroke-linejoin="round" />
 
-      <!-- 6. Corte de la Cápsula Lateral del Pulgar -->
-      <path d="M 142,106 
-               C 147,125 158,135 174,136
-               C 188,137 205,124 216,112
-               C 224,103 234,88 240,68" 
-            fill="none" stroke="#0f172a" stroke-width="1.5" opacity="0.8" />
+        <!-- Sombra suave de transición en la vaguada del pulgar -->
+        <path d="M 176,82 C 185,138 215,185 308,192 L 150,224 C 155,175 162,120 176,82 Z" fill="#090d16" opacity="0.28" />
 
-      <!-- 7. Botones Laterales de Navegación -->
-      <g>
-        <!-- Botón Lateral Delantero (CID 0x0056) -->
-        <g class="cursor-pointer group" on:click={() => selectButton(0x0056)} on:keydown={(e) => handleKeyDown(e, 0x0056)} role="button" tabindex="0" aria-label="Botón Lateral Adelante">
-          <path d="M 178,124 
-                   C 183,121 190,116 193,113 
-                   C 195,111 194,109 191,110 
-                   C 187,112 181,117 176,120 
-                   C 174,122 175,125 178,124 Z" 
-                fill={$selectedCid === 0x0056 ? 'url(#selectedGrad)' : 'url(#interactiveGrad)'} 
+        <!-- Línea de partición técnica entre la isla frontal y el cuerpo -->
+        <path d="M 151,72 C 129,103 107,145 89,192 L 69,193" fill="none" stroke="#090d16" stroke-width="1.6" stroke-linejoin="round" />
+
+        <!-- Costura diagonal interna que baja hasta el vértice del puerto USB-C -->
+        <path d="M 89,192 L 75,228" fill="none" stroke="#090d16" stroke-width="1.3" />
+        <path d="M 90,192 L 76,228" fill="none" stroke="#475569" stroke-width="0.6" opacity="0.4" />
+      </g>
+
+      <!-- ==================== 4. ESTRÍAS DE AGARRE DEL PULGAR ==================== -->
+      <g id="svg-thumb-ridges" fill="none" stroke-linecap="round">
+        <!-- Sombra de las estrías (relieve negativo) -->
+        <g stroke="url(#ridge-dark)" stroke-width="2.2">
+          <path d="M 229,63 C 237,108 258,156 303,189" />
+          <path d="M 224,66 C 231,112 251,160 293,192" />
+          <path d="M 218,70 C 224,116 242,163 282,195" />
+          <path d="M 212,73 C 217,120 233,166 270,197" />
+          <path d="M 205,76 C 209,123 223,169 257,200" />
+          <path d="M 198,80 C 201,126 212,172 243,203" />
+          <path d="M 190,83 C 191,129 200,175 228,206" />
+          <path d="M 181,86 C 181,132 187,178 212,209" />
+        </g>
+        <!-- Luz de las estrías (relieve positivo) -->
+        <g stroke="url(#ridge-grad)" stroke-width="1.1">
+          <path d="M 230,63 C 238,108 259,156 304,189" />
+          <path d="M 225,66 C 232,112 252,160 294,192" />
+          <path d="M 219,70 C 225,116 243,163 283,195" />
+          <path d="M 213,73 C 218,120 234,166 271,197" />
+          <path d="M 206,76 C 210,123 224,169 258,200" />
+          <path d="M 199,80 C 202,126 213,172 244,203" />
+          <path d="M 191,83 C 192,129 201,175 229,206" />
+          <path d="M 182,86 C 182,132 188,178 213,209" />
+        </g>
+      </g>
+
+      <!-- ==================== 5. FALDÓN BASE INFERIOR ==================== -->
+      <g id="bottom-skirt">
+        <!-- Patín PTFE / Base de deslizamiento inferior -->
+        <path d="M 76,272 L 266,271 L 274,274 L 78,275 Z" fill="#020617" />
+
+        <!-- Bloque sólido inferior que sostiene el reposapulgar -->
+        <path d="M 56,238 
+                 L 75,228 
+                 L 314,193 
+                 C 314,218 303,245 285,269 
+                 C 282,272 278,273 272,273 
+                 L 75,273 
+                 C 68,273 64,269 61,262 
+                 Z" fill="url(#skirt-grad)" stroke="#1e293b" stroke-width="1" stroke-linejoin="round" />
+
+        <!-- Hendidura oscura de separación entre el cuerpo y la base -->
+        <path d="M 56,238 L 75,228 L 314,193" fill="none" stroke="#050811" stroke-width="1.8" stroke-linejoin="round" />
+
+        <!-- Reflejo especular en la arista viva del ala inferior -->
+        <path d="M 56,239.5 L 75,229.5 L 314,194.5" fill="none" stroke="#64748b" stroke-width="0.8" opacity="0.55" stroke-linejoin="round" />
+      </g>
+
+      <!-- ==================== 6. PUERTO USB-C (FRONTAL INFERIOR) ==================== -->
+      <g id="svg-usbc">
+        <!-- Cavidad biselada en el faldón delantero -->
+        <rect x="75" y="241" width="33" height="17" rx="7.5" fill="#060911" stroke="#334155" stroke-width="1" />
+        <!-- Sombra profunda del conector -->
+        <rect x="78" y="243.5" width="27" height="12" rx="5.5" fill="#020617" stroke="#1e293b" stroke-width="0.6" />
+        <!-- Receptáculo metálico USB-C -->
+        <rect x="81" y="245.5" width="21" height="8" rx="4" fill="#090d16" stroke="#60a5fa" stroke-width="1" opacity="0.9" />
+        <!-- Lengüeta central de pines USB-C -->
+        <line x1="85" y1="249.5" x2="98" y2="249.5" stroke="#93c5fd" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+
+      <!-- ==================== 7. CORONA / PLACA METÁLICA SUPERIOR ==================== -->
+      <g id="aluminum-crown">
+        <!-- Sombra proyectada bajo el labio de aluminio -->
+        <path d="M 136,69 L 164,79 C 170,82 177,82 184,79 L 234,56" fill="none" stroke="#020617" stroke-width="2.5" opacity="0.75" stroke-linecap="round" />
+
+        <!-- Pared lateral biselada de la placa de aluminio -->
+        <path d="M 140,59 
+                 L 164,69 
+                 C 170,71 176,71 182,68 
+                 L 230,45 
+                 L 234,54 
+                 L 184,77 
+                 C 177,80 170,80 164,77 
+                 L 136,68 
+                 C 136,64 138,61 140,59 Z" fill="url(#metal-side)" stroke="#64748b" stroke-width="0.8" stroke-linejoin="round" />
+
+        <!-- Cara superior inclinada de aluminio cepillado -->
+        <path d="M 140,59 
+                 C 138,56 140,53 144,51 
+                 L 196,26 
+                 C 202,23 208,23 213,26 
+                 L 228,37 
+                 C 232,40 233,43 230,45 
+                 L 182,68 
+                 C 176,71 170,71 164,69 
+                 Z" fill="url(#metal-top)" stroke="#e2e8f0" stroke-width="1" stroke-linejoin="round" />
+
+        <!-- Brillo especular en la arista del bisel metálico -->
+        <path d="M 141,59.5 L 164,68.5 C 170,70.5 176,70.5 182,67.5 L 229,44.5" fill="none" stroke="#ffffff" stroke-width="0.9" opacity="0.8" />
+      </g>
+
+      <!-- ==================== 8. BOTÓN SUPERIOR DPI (CID 0x00FD) ==================== -->
+      <g class="cursor-pointer group" on:click={() => selectButton(0x00FD)} on:keydown={(e) => handleKeyDown(e, 0x00FD)} role="button" tabindex="0" aria-label="Botón Superior DPI">
+        <g id="svg-btn-top" filter={$selectedCid === 0x00FD ? 'url(#selectedGlow)' : 'url(#interactive-glow)'} class="transition-all duration-200 group-hover:brightness-125">
+          <!-- Bisel exterior encastrado en el aluminio -->
+          <path d="M 197,36 
+                   C 194,34 195,31 198,29 
+                   L 204,26 
+                   C 208,24 212,25 215,27 
+                   L 223,33 
+                   C 226,35 226,38 222,40 
+                   L 215,43 
+                   C 211,45 207,44 204,42 
+                   Z" fill="#0f172a" stroke="#475569" stroke-width="0.8" />
+          <!-- Superficie interactiva del botón de velocidad de cursor -->
+          <path d="M 198.5,35.5 
+                   C 196,34 196.5,31.5 199,30 
+                   L 204.5,27.2 
+                   C 208,25.5 211.5,26 214,28 
+                   L 221.5,33.5 
+                   C 224,35 224,37.5 221,39 
+                   L 214.5,42 
+                   C 211,43.5 207.5,43 205,41 
+                   Z" 
+                fill={$selectedCid === 0x00FD ? 'url(#selectedGrad)' : 'url(#interactive-btn)'} 
+                stroke={$selectedCid === 0x00FD ? '#38bdf8' : '#60a5fa'} 
+                stroke-width={$selectedCid === 0x00FD ? 2.4 : 1.6} 
+                stroke-linejoin="round" />
+          <!-- Destello técnico central -->
+          <ellipse cx="210" cy="34.5" rx="4.5" ry="2.2" transform="rotate(-24 210 34.5)" 
+                   fill={$selectedCid === 0x00FD ? '#38bdf8' : '#60a5fa'} 
+                   opacity={$selectedCid === 0x00FD ? 0.6 : 0.25} />
+        </g>
+      </g>
+
+      <!-- ==================== 9. CÁPSULA DE BOTONES LATERALES DEL PULGAR ==================== -->
+      <!-- Alojamiento de la píldora bajo la cresta superior -->
+      <path d="M 189,78 
+               L 218,64 
+               C 221,62.5 224.5,64 225,67.5 
+               L 226,74 
+               C 226.5,77.5 224.5,81 221,82.5 
+               L 192,96.5 
+               C 188.5,98 185.5,96 185,92.5 
+               L 184,86 
+               C 183.5,82.5 185.5,79.5 189,78 Z" fill="#060911" stroke="#334155" stroke-width="0.9" stroke-linejoin="round" />
+
+      <!-- Botón Lateral Delantero - Forward (CID 0x0056) -->
+      <g class="cursor-pointer group" on:click={() => selectButton(0x0056)} on:keydown={(e) => handleKeyDown(e, 0x0056)} role="button" tabindex="0" aria-label="Botón Lateral Adelante">
+        <g id="svg-btn-forward" filter={$selectedCid === 0x0056 ? 'url(#selectedGlow)' : 'url(#interactive-glow)'} class="transition-all duration-200 group-hover:brightness-125">
+          <path d="M 190,79.5 
+                   L 204.5,72.5 
+                   L 206,87.5 
+                   L 192,94.5 
+                   C 189,96 186.8,94.5 186.4,91.5 
+                   L 185.6,86 
+                   C 185.2,83 187,81 190,79.5 Z" 
+                fill={$selectedCid === 0x0056 ? 'url(#selectedGrad)' : 'url(#interactive-btn)'} 
                 stroke={$selectedCid === 0x0056 ? '#38bdf8' : '#60a5fa'} 
-                stroke-width={$selectedCid === 0x0056 ? 2.2 : 1}
-                filter={$selectedCid === 0x0056 ? 'url(#selectedGlow)' : ''}
-                class="transition-all duration-200 group-hover:brightness-125" />
-        </g>
-        
-        <!-- Botón Lateral Trasero (CID 0x0053) -->
-        <g class="cursor-pointer group" on:click={() => selectButton(0x0053)} on:keydown={(e) => handleKeyDown(e, 0x0053)} role="button" tabindex="0" aria-label="Botón Lateral Atrás">
-          <path d="M 194,112 
-                   C 198,109 204,104 207,101 
-                   C 209,99 208,97 205,98 
-                   C 201,100 195,105 192,108 
-                   C 190,110 191,113 194,112 Z" 
-                fill={$selectedCid === 0x0053 ? 'url(#selectedGrad)' : 'url(#interactiveGrad)'} 
-                stroke={$selectedCid === 0x0053 ? '#38bdf8' : '#60a5fa'} 
-                stroke-width={$selectedCid === 0x0053 ? 2.2 : 1}
-                filter={$selectedCid === 0x0053 ? 'url(#selectedGlow)' : ''}
-                class="transition-all duration-200 group-hover:brightness-125" />
+                stroke-width={$selectedCid === 0x0056 ? 2.2 : 1.5} 
+                stroke-linejoin="round" />
+          <!-- Relieve táctil sutil -->
+          <path d="M 188,83.5 C 188,82 189.5,81 191,80.2 L 202.5,74.8" fill="none" stroke="#93c5fd" stroke-width="0.75" opacity="0.55" stroke-linecap="round" />
         </g>
       </g>
 
-      <!-- 8. Indicador LED de Estado (id="svg-led") -->
-      <circle cx="166" cy="131" r="2.5" fill={$uiState === 'Connected' ? '#10b981' : '#f59e0b'} filter="url(#softGlow)" />
-      <circle cx="166" cy="131" r="0.8" fill="#ffffff" />
-
-      <!-- 9. Área del Pulgar Texturizada / Estrías de Agarre -->
-      <g opacity="0.25">
-        <path d="M 195,142 C 202,150 208,172 201,215" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
-        <path d="M 203,140 C 213,148 221,170 213,218" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
-        <path d="M 211,138 C 224,146 234,168 225,221" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
-        <path d="M 220,134 C 236,144 246,166 238,223" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
-        <path d="M 228,130 C 248,141 259,165 251,226" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
-        <path d="M 237,126 C 260,138 272,163 264,228" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
-        <path d="M 246,122 C 272,135 284,161 278,231" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
-        <path d="M 255,118 C 285,132 297,159 292,233" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
+      <!-- Botón Lateral Trasero - Back (CID 0x0053) -->
+      <g class="cursor-pointer group" on:click={() => selectButton(0x0053)} on:keydown={(e) => handleKeyDown(e, 0x0053)} role="button" tabindex="0" aria-label="Botón Lateral Atrás">
+        <g id="svg-btn-back" filter={$selectedCid === 0x0053 ? 'url(#selectedGlow)' : 'url(#interactive-glow)'} class="transition-all duration-200 group-hover:brightness-125">
+          <path d="M 206.5,71.5 
+                   L 217.5,66 
+                   C 220.5,64.5 222.8,66 223.2,69 
+                   L 224,74.5 
+                   C 224.4,77.5 222.5,80 219.5,81.5 
+                   L 208,86.8 
+                   Z" 
+                fill={$selectedCid === 0x0053 ? 'url(#selectedGrad)' : 'url(#interactive-btn)'} 
+                stroke={$selectedCid === 0x0053 ? '#38bdf8' : '#818cf8'} 
+                stroke-width={$selectedCid === 0x0053 ? 2.2 : 1.5} 
+                stroke-linejoin="round" />
+          <!-- Relieve táctil sutil -->
+          <path d="M 208.5,72.2 L 217.5,67.8 C 219.5,67 221,67.5 221.5,69" fill="none" stroke="#a5b4fc" stroke-width="0.75" opacity="0.55" stroke-linecap="round" />
+        </g>
       </g>
 
-      <!-- 10. Puerto USB-C frontal -->
-      <g>
-        <path d="M 70,268 C 65,267 61,269 61,271 C 61,273 65,274 70,274 C 75,274 79,273 79,271 C 79,269 75,267 70,268 Z" 
-              fill="#090d16" stroke="#334155" stroke-width="0.8" />
-        <rect x="65" y="270" width="10" height="2" rx="0.5" fill="#1e293b" />
+      <!-- ==================== 10. INDICADOR LED DE ESTADO ==================== -->
+      <g id="svg-led">
+        <circle cx="173" cy="95" r="3.2" fill="#090d16" stroke="#334155" stroke-width="0.8" />
+        <circle cx="173" cy="95" r="1.8" fill={$uiState === 'Connected' ? '#10b981' : '#f59e0b'} filter="url(#interactive-glow)" />
+        <circle cx="172.5" cy="94.5" r="0.6" fill="#e0f2fe" />
       </g>
-
-      <!-- Resplandores de luz cenital -->
-      <path d="M 128,105 C 105,135 80,185 55,225" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.1" />
-      <path d="M 145,108 C 158,118 180,126 195,115" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.08" />
     </svg>
   </div>
 
