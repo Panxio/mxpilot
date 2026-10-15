@@ -15,7 +15,9 @@ use std::time::{Duration, Instant};
 const MAX_CLIENTS: usize = 8;
 const MAX_PAYLOAD_BYTES: usize = 65_536; // 64 KB
 const INCOMPLETE_LINE_TIMEOUT: Duration = Duration::from_secs(2);
+const IDLE_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
 const BATTERY_CACHE_TTL: Duration = Duration::from_secs(60);
+const HW_REPLY_TIMEOUT: Duration = Duration::from_millis(2000);
 
 /// Extrae el UID del cliente conectado usando getsockopt con SO_PEERCRED.
 fn get_peer_uid(stream: &UnixStream) -> Result<libc::uid_t, std::io::Error> {
@@ -162,9 +164,16 @@ impl IpcServer {
             let mut disconnected_indices = Vec::new();
 
             for (i, client) in clients.iter_mut().enumerate() {
-                // Timeout anti-slow-loris para líneas incompletas
-                if !client.buffer.is_empty() && now.duration_since(client.last_activity) > INCOMPLETE_LINE_TIMEOUT {
-                    log::warn!("Timeout de línea incompleta en cliente IPC. Cerrando conexión.");
+                // Timeout anti-slow-loris para líneas incompletas y desconexión de clientes ociosos
+                let elapsed_inactivity = now.duration_since(client.last_activity);
+                let is_timeout = if client.buffer.is_empty() {
+                    elapsed_inactivity > IDLE_CONNECTION_TIMEOUT
+                } else {
+                    elapsed_inactivity > INCOMPLETE_LINE_TIMEOUT
+                };
+
+                if is_timeout {
+                    log::warn!("Timeout de inactividad en cliente IPC. Cerrando conexión.");
                     disconnected_indices.push(i);
                     continue;
                 }
@@ -246,16 +255,16 @@ impl IpcServer {
         match request.command {
             IpcCommand::Ping => IpcResponse::ok(req_id, "pong"),
             IpcCommand::GetStatus => {
-                let status = self.state.read().unwrap().to_status_data();
+                let status = self.state.read().unwrap_or_else(|e| e.into_inner()).to_status_data();
                 IpcResponse::ok(req_id, status)
             }
             IpcCommand::GetHealth => {
-                let health = self.state.read().unwrap().to_health();
+                let health = self.state.read().unwrap_or_else(|e| e.into_inner()).to_health();
                 IpcResponse::ok(req_id, health)
             }
             IpcCommand::GetBattery => {
                 let need_refresh = {
-                    let s = self.state.read().unwrap();
+                    let s = self.state.read().unwrap_or_else(|e| e.into_inner());
                     match (s.battery_level, s.battery_last_updated) {
                         (Some(_), Some(updated)) => updated.elapsed() > BATTERY_CACHE_TTL,
                         _ => true,
@@ -265,7 +274,7 @@ impl IpcServer {
                 if need_refresh {
                     let (reply_tx, reply_rx) = std::sync::mpsc::sync_channel(1);
                     if self.cmd_sender.send(DaemonCommand::RefreshBattery { reply: reply_tx }).is_ok() {
-                        if let Ok(Ok((pct, status))) = reply_rx.recv_timeout(Duration::from_millis(500)) {
+                        if let Ok(Ok((pct, status))) = reply_rx.recv_timeout(HW_REPLY_TIMEOUT) {
                             return IpcResponse::ok(req_id, BatteryData {
                                 percentage: pct,
                                 status,
@@ -274,7 +283,7 @@ impl IpcServer {
                     }
                 }
 
-                let state_guard = self.state.read().unwrap();
+                let state_guard = self.state.read().unwrap_or_else(|e| e.into_inner());
                 if let Some(bat) = state_guard.to_battery_data() {
                     IpcResponse::ok(req_id, bat)
                 } else {
@@ -304,10 +313,10 @@ impl IpcServer {
                 };
 
                 if self.cmd_sender.send(cmd).is_ok() {
-                    match reply_rx.recv_timeout(Duration::from_millis(500)) {
+                    match reply_rx.recv_timeout(HW_REPLY_TIMEOUT) {
                         Ok(Ok(())) => {
                             // Actualizar mapeo en memoria exclusivamente tras éxito verificado en hardware
-                            let mut s = self.state.write().unwrap();
+                            let mut s = self.state.write().unwrap_or_else(|e| e.into_inner());
                             if is_default {
                                 s.mapping.remove(&cid);
                                 s.diverted_cids.retain(|&c| c != cid);

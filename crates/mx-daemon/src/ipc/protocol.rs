@@ -17,6 +17,9 @@ pub const VALID_CIDS: &[u16] = &[
     0x00FD, // Botón superior de DPI (Kill-Gate)
 ];
 
+/// Máximo número de modificadores permitidos en un KeyCombo (Ctrl, Alt, Shift, Meta).
+pub const MAX_MODIFIERS: usize = 4;
+
 /// Representación serializable de una acción de entrada.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -44,10 +47,19 @@ impl ActionPayload {
                 Ok(Action::SingleKey(code))
             }
             Self::KeyCombo { modifiers, key } => {
+                if modifiers.len() > MAX_MODIFIERS {
+                    return Err(format!(
+                        "Demasiados modificadores ({}). Máximo permitido: {}",
+                        modifiers.len(),
+                        MAX_MODIFIERS
+                    ));
+                }
                 let mut mods = Vec::new();
                 for m in modifiers {
                     let c = parse_key_code(m)?;
-                    mods.push(c);
+                    if !mods.contains(&c) {
+                        mods.push(c);
+                    }
                 }
                 let code = parse_key_code(key)?;
                 Ok(Action::KeyCombo {

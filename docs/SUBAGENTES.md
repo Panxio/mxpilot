@@ -103,4 +103,11 @@ Para evitar errores de lanzamiento, loops visuales en la consola y saturación d
      systemd-run ... || code=$?
      ```
 
+---
+
+## 6. Lecciones Aprendidas de Gobernanza y Autonomía (Sesión 14)
+
+Para un análisis exhaustivo sobre el equilibrio entre la iniciativa autónoma de los subagentes (generación de tests/scripts) y las salvaguardas de contención mediante Git Worktrees y restricciones de filesystem en Linux, consultar:
+👉 [`docs/LECCIONES_GOBERNANZA_SUBAGENTES.md`](file:///home/panxio/Projects/mx-options-linux/docs/LECCIONES_GOBERNANZA_SUBAGENTES.md).
+
 

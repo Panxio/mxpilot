@@ -9,3 +9,7 @@ graphify-out/cost.json
 .claude/settings.local.json
 # os
 .DS_Store
+
+# Python
+__pycache__/
+*.pyc

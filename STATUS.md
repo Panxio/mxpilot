@@ -6,20 +6,15 @@
 > Creado: 2026-10-13
 
 > ### 📌 RESUMEN EJECUTIVO DE RELEVO RÁPIDO (LEER AL INICIAR SESIÓN)
-> - **Última Sesión Cerrada:** Sesión 13: *Tanda Colegiada Multi-Agente de Ergonomía Visual, Diagnóstico Gestalt de Fullscreen, Implementación de Top-Pinning y Cierre Formal de Fase 4 (GUI Desktop)*.
-> - **Estado Global del Proyecto:** Fases 0, 1, 2, 3 y 4 **APROBADAS Y VERIFICADAS EN HARDWARE REAL**.
+> - **Última Sesión Cerrada:** Sesión 14: *Fase 4.5: Tanda Colegiada de Endurecimiento de Seguridad y Ethical Hacking Web, Blindaje CSP, Capabilities Mínimas, Hardening IPC y Sandboxing systemd (4.0 OK)*.
+> - **Estado Global del Proyecto:** Fases 0, 1, 2, 3, 4 y 4.5 **APROBADAS Y VERIFICADAS EN HARDWARE REAL**.
 > - **Fases Aprobadas:**
 >   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-probe`) — 29 features volcadas, kill-gate superado.
 >   - ✅ **Fase 1:** Divert de Botón Superior & Inyección Virtual (`mx-uinput`, `mx-cli`) — RAII y Down/Up verificado.
 >   - ✅ **Fase 2:** Reglas `udev` (`70-mx-options.rules`) — Permisos de usuario sin `sudo`.
 >   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS 784 KB (<15 MB), parada limpia <0.1 s, fail-safe Zero Stuck Keys verificado.
->   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — **APROBACIÓN TOTAL CON VISTO BUENO DEL USUARIO:**
->     - Soporte multi-CID dinámico (`0x00FD` Superior, `0x0056` Adelante, `0x0053` Atrás, `0x0052` Clic Rueda).
->     - Función de Fábrica (`SystemDefault`) para des-desviar en hardware y restaurar navegación nativa en navegador.
->     - Presets de navegación de Espacios de Trabajo virtuales en GNOME (Ctrl + Alt + → / ←).
->     - Iconografía oficial: Opción 2 (Squircle Esmeralda `#059669` con monograma MX blanco en 8-bit RGBA sin artefactos en Ayatana).
->     - Layout perfeccionado por comité colegiado (Haiku, DeepSeek, Luna, Muse): **Top-Pinning a 24 px** bajo la cabecera, sin abismo en Fullscreen y preservando el 10/10 en ventana por defecto (`960×620`).
->     - Suite de pruebas: 37/37 tests Rust y 13/13 tests JS pasando, 0 clippy warnings, binario release de 11 MB.
+>   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — Multi-CID divert, restauración nativa `SystemDefault`, navegación de escritorios, icono esmeralda Opción 2, layout Top-Pinning en Fullscreen validado visualmente por el usuario.
+>   - ✅ **Fase 4.5:** Endurecimiento & Ethical Hacking Web (`mx-gui` + `mx-daemon`) — CSP estricta de producción sin eval, capabilities mínimas (`core:event`), deshabilitación de drag-and-drop, límite `MAX_MODIFIERS = 4` con deduplicación, `IDLE_CONNECTION_TIMEOUT = 5 s` para reciclar descriptores, sandboxing systemd con exposición reducida de 8.9 EXPOSED a 4.0 OK, 21 tests de fuzzing adversarial agregados (58 tests Rust pasando, 13 tests JS pasando, 0 CVEs en cargo/npm audit, 9/9 ataques mitigados en Python).
 > - **Fase Siguiente Inmediata:** **Fase 5: Empaquetado (.deb) y Distribución Limpia**.
 > - **Acción Inmediata al Retomar en la Próxima Sesión:**
 >   1. Elaborar la especificación técnica `specs/F5-packaging-deb.md` detallando:
@@ -118,6 +113,7 @@ Fase 1: Divert & uinput (mx-cli)       [█████████████�
 Fase 2: Permisos udev                  [████████████████████]  Reglas instaladas y funcionales
 Fase 3: Daemon systemd & IPC           [████████████████████]  APROBADO (Daemon, IPC & Audit verificado)
 Fase 4: GUI Tauri v2 (Svelte)          [████████████████████]  APROBADO (Implementación completa y verificada)
+Fase 4.5: Seguridad & Hardening Web    [████████████████████]  APROBADO (CSP, IPC blindado, Fuzzing, 4.0 OK)
 Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░░░░░░░░]  Distribución limpia
 ```
 
@@ -128,6 +124,7 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
 | **F2: Permisos `udev`** | Regla en `/etc/udev/rules.d/` con `TAG+="uaccess"` y `GROUP="plugdev"` para `046d` y `uinput`. | `opencode-go/deepseek-v4.1-flash` (revisión de reglas de seguridad Linux) | **APROBADO:** Ejecución de `mx-probe` y `mx-cli` como usuario normal sin `sudo`. |
 | **F3: Daemon `systemd` & IPC** | Daemon en segundo plano con reconexión automática tras suspensión; socket Unix seguro. | **Gemini 3.8 Flash High** + 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) | **APROBADO:** 28 tests pasando, clippy 0 warnings, RSS en hardware 3.3 MB (<15 MB), parada limpia <0.1 s, IPC seguro SO_PEERCRED, auditoría colegiada cerrada. |
 | **F4: GUI Tauri v2** | Interfaz en Svelte + Tailwind con System Tray, selector de atajos y estado de batería. | **Gemini 3.8 Flash High** + 4 subagentes (`haiku`, `luna`, `deepseek`, `muse`) | **APROBADO CON VISTO BUENO:** Multi-CID divert, restauración nativa `SystemDefault`, navegación de escritorios, icono esmeralda Opción 2, layout con Top-Pinning a 24 px en Fullscreen validado visualmente por el usuario. 37 tests Rust, 13 tests JS, 0 clippy warnings. |
+| **F4.5: Seguridad & Hardening** | Ethical hacking web, CSP estricta, capabilities mínimas, resiliencia IPC y sandbox systemd. | **Gemini 3.8 Flash High** + 4 subagentes (`deepseek`, `haiku`, `muse`, `luna`) | **APROBADO:** CSP estricta sin eval, capabilities mínimas, 58 tests Rust pasando, 13 tests JS pasando, 0 clippy warnings, 0 CVEs en cargo/npm audit, score systemd 4.0 OK, 9/9 ataques mitigados. |
 | **F5: Empaquetado & Convivencia** | Creación de `.deb`; detector de conflictos con `solaar` o `logid`. | **Gemini 3.8 Flash High** + `opencode-go/muse-spark-1.3-contributor` (telemetría / `mx-diag`) | Instalación limpia en Ubuntu/Debian; detección y aviso sin duplicar divert. |
 
 ---
@@ -450,7 +447,35 @@ Fase 5: Empaquetado .deb               [░░░░░░░░░░░░░�
   - Binario release instalado en `~/.local/bin/mx-gui` (sha256 `117b4a55...`), instancia previa finalizada limpiamente y nueva instancia ejecutándose en vivo (PID 1433).
 - **Aprobación del Usuario (Visto Bueno):**
   - El usuario evaluó en vivo la aplicación en pantalla completa (captura `media_1792021874780_8679bd0f.png`): *"está super está perfecto. Y que ahora sí tiene esa vista más natural cuando se pone full screen, por lo menos no es molesto a la armonía de la aplicación. Y el despliegue está también. Bien, los despliegues por defecto tienen un tamaño preciso. Me gusta. ¿Está aprobada esta idea? ¿Visto bueno?"*.
-- **Estado:** ✅ **Fase 4 (GUI Desktop Tauri v2) formalmente aprobada con visto bueno del usuario. Todo el repositorio y la suite de pruebas quedan en verde para iniciar la Fase 5 (Empaquetado .deb) en una nueva sesión limpia.**
+- **Estado:** ✅ **Fase 4 (GUI Desktop Tauri v2) formalmente aprobada con visto bueno del usuario.**
+
+---
+
+### Sesión 14 (2026-10-14) — Fase 4.5: Tanda Colegiada de Endurecimiento de Seguridad, Ethical Hacking Web y Cierre Defensivo Pre-Fase 5
+- **Tanda Colegiada Multi-Agente de Seguridad (`security_f4_5`):**
+  - Despachada tanda con los 4 subagentes especializados (`haiku`, `deepseek`, `muse`, `luna`) mediante `scripts/run-f4.5-security-tanda.sh` con `systemd-run -p MemoryMax=2G`, `< /dev/null`, timeout y concurrencia máxima de 2 puestos.
+  - Resultados y aportes:
+    - `deepseek`: Análisis empírico en Linux. Descubrió que `CapabilityBoundingSet=` y `ProtectClock=` provocan `exit 218` en `systemd --user`. Identificó vector de agotamiento de descriptores por conexiones ociosas (H1). Creó arnés ejecutable `scripts/security/f45-ipc-attacks.py` (9/9 PASS).
+    - `haiku`: Matriz OWASP Top 10 con 35 casos formales en `specs/F4.5-matriz-seguridad.md`. Cota estricta `MAX_MODIFIERS = 4` y balance de timeouts (H1 y H2).
+    - `muse`: Suite de fuzzing y ráfagas con 21 tests automatizados en Rust (`crates/mx-daemon/tests/ipc_hardening.rs` y `crates/mx-gui/tests/client_hardening_test.rs`).
+    - `luna`: CSP estricta de producción para `tauri.conf.json`, capabilities mínimas (`core:event:allow-listen/unlisten`), `dragDropEnabled: false` y auditoría del DOM en Svelte (0 `@html`, 0 `eval`).
+- **Endurecimientos Implementados en Producción:**
+  - *Capa Web:* CSP estricta aplicada en `crates/mx-gui/tauri.conf.json` (`default-src 'none'; script-src 'self'; ...`). Restricción de permisos en `capabilities/default.json` a solo eventos. Desactivado drag-and-drop.
+  - *IPC y Daemon:* `crates/mx-daemon/src/ipc/protocol.rs` limita `KeyCombo.modifiers` a 4 familias con deduplicación. `server.rs` incorpora `IDLE_CONNECTION_TIMEOUT = 5 s` para liberar slots de clientes mudos. Blindaje de `RwLock` con `unwrap_or_else` contra envenenamiento. `HW_REPLY_TIMEOUT` sincronizado a 2000 ms.
+  - *Sandbox systemd:* `systemd/user/mx-options.service` endurecido con 24 directivas estrictas (`ProtectSystem=strict`, `ProtectHome=read-only`, `PrivateTmp=yes`, `SystemCallFilter=@system-service`, etc.), reduciendo la puntuación de exposición de **8.9 EXPOSED a 4.0 OK**.
+- **Verificación de Árbitros Objetivos:**
+  - `cargo test --workspace`: **58/58 tests pasando al 100%** (13 core, 11 daemon lib, 15 fuzzing, 4 ipc, 1 gui lib, 6 client-hardening, 7 client-mock, 1 uinput) ✅
+  - `npm --prefix crates/mx-gui/ui test`: **13/13 tests pasando en verde** ✅
+  - `cargo clippy --workspace --all-targets -- -D warnings`: **0 warnings** ✅
+  - `npm audit`: **0 vulnerabilidades** ✅
+  - `cargo audit`: **0 vulnerabilidades** en 469 crates ✅
+  - `python3 scripts/security/f45-ipc-attacks.py`: **9/9 ataques mitigados (PASS)** ✅
+  - `systemd-analyze --user security mx-options.service`: **4.0 OK** ✅
+  - `npm --prefix crates/mx-gui/ui run build`: **0 errores** (CSS: 35.59 kB, JS: 74.12 kB) ✅
+  - `cargo build --release -p mx-daemon && cargo build --release -p mx-gui`: **Compilado OK** ✅
+  - Binarios release actualizados en `~/.local/bin/`, servicio systemd reiniciado en sandbox (1.9 MB RSS).
+- **Estado:** ✅ **Fase 4.5 (Seguridad y Ethical Hacking Web) COMPLETADA Y APROBADA. El proyecto queda blindado en profundidad y listo para la Fase 5: Empaquetado (.deb) y Distribución Limpia.**
+
 
 
 
