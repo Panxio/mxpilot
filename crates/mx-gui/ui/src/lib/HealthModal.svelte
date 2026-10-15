@@ -94,20 +94,23 @@
             </div>
           </div>
 
-          <!-- Métricas de Memoria VmRSS (Pilar 7) -->
+          <!-- Métricas de Memoria VmRSS -->
           <div class="p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/30">
-            <div class="flex items-center justify-between text-indigo-300 font-semibold mb-1">
-              <span>Presupuesto de Memoria (Pilar 7)</span>
-              <span class="text-[10px] font-mono">Meta: &lt; 80 MB</span>
+            <div class="flex items-center justify-between text-indigo-300 font-semibold mb-2">
+              <span class="flex items-center space-x-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                <span>Consumo de Memoria RAM</span>
+              </span>
+              <span class="text-[10px] font-mono text-slate-400 uppercase">Residente (RSS)</span>
             </div>
-            <div class="grid grid-cols-2 gap-2 mt-2 text-slate-300">
-              <div>
-                <span class="text-[10px] text-slate-400">Daemon VmRSS:</span>
-                <span class="font-mono ml-1">{($healthData.rss_kb / 1024).toFixed(2)} MB</span>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
+                <span class="text-[10px] text-slate-400 uppercase font-mono">Daemon (Servicio)</span>
+                <div class="font-medium text-slate-200 mt-0.5 font-mono">{($healthData.rss_kb / 1024).toFixed(2)} MB</div>
               </div>
-              <div>
-                <span class="text-[10px] text-slate-400">GUI Proceso VmRSS:</span>
-                <span class="font-mono ml-1">{($guiMemoryKb / 1024).toFixed(2)} MB</span>
+              <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
+                <span class="text-[10px] text-slate-400 uppercase font-mono">Interfaz (GUI)</span>
+                <div class="font-medium text-slate-200 mt-0.5 font-mono">{($guiMemoryKb / 1024).toFixed(2)} MB</div>
               </div>
             </div>
           </div>
