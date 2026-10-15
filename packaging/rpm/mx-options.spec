@@ -19,6 +19,16 @@ Incluye el servicio de sesion (mx-daemon), la interfaz grafica (mx-gui),
 la CLI (mx-cli), la sonda de protocolo (mx-probe) y telemetria (mx-diag).
 
 %post
+if [ -f /etc/udev/rules.d/99-mx-options.rules ]; then
+    if grep -q "MX Options Linux" /etc/udev/rules.d/99-mx-options.rules 2>/dev/null; then
+        rm -f /etc/udev/rules.d/99-mx-options.rules
+    fi
+fi
+if [ -f /etc/udev/rules.d/70-mx-options.rules ]; then
+    if grep -q "MX Options Linux" /etc/udev/rules.d/70-mx-options.rules 2>/dev/null; then
+        rm -f /etc/udev/rules.d/70-mx-options.rules
+    fi
+fi
 if [ -d /run/udev ]; then
     udevadm control --reload-rules 2>/dev/null || true
     udevadm trigger --subsystem-match=hidraw --subsystem-match=misc 2>/dev/null || true

@@ -55,7 +55,12 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
 
       - name: Build Debian Package
-        run: ./scripts/package-deb.sh "${GITHUB_REF_NAME#v}"
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            ./scripts/package-deb.sh "${GITHUB_REF_NAME#v}"
+          else
+            ./scripts/package-deb.sh
+          fi
 
       - name: Audit Debian Package
         run: ./scripts/audit-packages.sh target/mx-options_*_amd64.deb
