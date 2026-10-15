@@ -1,0 +1,99 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-deb:
+    name: Build Debian Package (.deb)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            build-essential \
+            libudev-dev \
+            libevdev-dev \
+            dpkg-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'crates/mx-gui/ui/package-lock.json'
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix crates/mx-gui/ui
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache Rust dependencies
+        uses: swatinem/rust-cache@v2
+
+      - name: Run unit and integration tests
+        run: cargo test --workspace
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build Debian Package
+        run: ./scripts/package-deb.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Audit Debian Package
+        run: ./scripts/audit-packages.sh target/mx-options_*_amd64.deb
+
+      - name: Upload Debian Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mx-options-deb
+          path: target/mx-options_*_amd64.deb
+          retention-days: 14
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: build-deb
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Debian Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mx-options-deb
+          path: release-artifacts/
+
+      - name: Generate SHA256 Checksums
+        working-directory: release-artifacts
+        run: |
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-artifacts/*
+          generate_release_notes: true

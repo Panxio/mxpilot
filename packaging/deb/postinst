@@ -1,0 +1,36 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # 1. Limpieza de reglas udev de desarrollo previas en /etc (para evitar shadowing sobre /usr/lib)
+        rm -f /etc/udev/rules.d/99-mx-options.rules 2>/dev/null || true
+        if [ -f /etc/udev/rules.d/70-mx-options.rules ]; then
+            if grep -q "MX Options Linux" /etc/udev/rules.d/70-mx-options.rules 2>/dev/null; then
+                rm -f /etc/udev/rules.d/70-mx-options.rules
+            fi
+        fi
+
+        # 2. Recarga de reglas udev e inducción en caliente de permisos
+        if [ -d /run/udev ]; then
+            udevadm control --reload-rules 2>/dev/null || true
+            udevadm trigger --subsystem-match=hidraw --subsystem-match=misc 2>/dev/null || true
+        fi
+
+        # 3. Actualización de caché de temas de iconos FreeDesktop
+        if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor 2>/dev/null || true
+        fi
+
+        # 4. Actualización del índice de lanzadores de escritorio
+        if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database -q /usr/share/applications 2>/dev/null || true
+        fi
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    *)
+        ;;
+esac
+
+exit 0
