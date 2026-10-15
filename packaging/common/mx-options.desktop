@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=MX Options Linux
+Comment=Control y configuración nativa para ratones Logitech MX
+Exec=/usr/bin/mx-gui
+Icon=mx-options
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+Keywords=logitech;mouse;mx;vertical;dpi;options;
+StartupWMClass=mx-gui
+StartupNotify=true

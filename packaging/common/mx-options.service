@@ -1,0 +1,47 @@
+[Unit]
+Description=MX Options Linux Mouse Control Daemon
+Documentation=https://github.com/panxio/mx-options-linux
+After=graphical-session.target
+StartLimitIntervalSec=30s
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mx-daemon
+Restart=on-failure
+RestartSec=2s
+RestartPreventExitStatus=1
+KillSignal=SIGTERM
+TimeoutStopSec=3s
+StandardOutput=journal
+StandardError=journal
+
+# --- Sandbox defensivo verificado en systemd (8.9 EXPOSED -> 4.0 OK) ---
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @obsolete @debug @mount @cpu-emulation @raw-io @reboot @swap @module @clock
+PrivateNetwork=yes
+IPAddressDeny=any
+DevicePolicy=closed
+DeviceAllow=char-hidraw rw
+DeviceAllow=char-uinput rw
+UMask=0177
+ProtectHostname=yes
+KeyringMode=private
+ProtectProc=invisible
+ProcSubset=pid
+
+[Install]
+WantedBy=default.target
