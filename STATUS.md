@@ -16,13 +16,15 @@
 >   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — Multi-CID divert, restauración nativa `SystemDefault`, navegación de escritorios, icono esmeralda Opción 2, layout Top-Pinning en Fullscreen validado visualmente por el usuario.
 >   - ✅ **Fase 4.5:** Endurecimiento & Ethical Hacking Web (`mx-gui` + `mx-daemon`) — CSP estricta de producción sin eval, capabilities mínimas (`core:event`), deshabilitación de drag-and-drop, límite `MAX_MODIFIERS = 4` con deduplicación, `IDLE_CONNECTION_TIMEOUT = 5 s` para reciclar descriptores, sandboxing systemd con exposición reducida de 8.9 EXPOSED a 4.0 OK, 21 tests de fuzzing adversarial agregados (58 tests Rust pasando, 13 tests JS pasando, 0 CVEs en cargo/npm audit, 9/9 ataques mitigados en Python).
 > - **Fase Siguiente Inmediata:** **Fase 5: Empaquetado (.deb) y Distribución Limpia**.
-> - **Acción Inmediata al Retomar en la Próxima Sesión:**
->   1. Elaborar la especificación técnica `specs/F5-packaging-deb.md` detallando:
+> - **Acción Inmediata al Retomar en la Próxima Sesión (Sesión 15 - Sesión Limpia):**
+>   1. Crear rama dedicada para la fase: `git checkout -b feature/f5-packaging-deb`.
+>   2. Consultar documentación oficial de OpenCode para validar opciones de sandboxing / flags de solo lectura (`--read-only` o tool-filtering) según [`docs/LECCIONES_GOBERNANZA_SUBAGENTES.md`](file:///home/panxio/Projects/mx-options-linux/docs/LECCIONES_GOBERNANZA_SUBAGENTES.md).
+>   3. Elaborar la especificación técnica `specs/F5-packaging-deb.md` detallando:
 >      - Estructura del paquete `.deb` (`/usr/bin/mx-daemon`, `/usr/bin/mx-gui`, `/usr/bin/mx-diag`, `/etc/udev/rules.d/70-mx-options.rules`, `/usr/lib/systemd/user/mx-options.service`, `/usr/share/applications/mx-options.desktop`, `/usr/share/icons/hicolor/...`).
 >      - Dependencias de runtime para Debian/Ubuntu: `libayatana-appindicator3-1`, `libwebkit2gtk-4.1-0`, `libssl3`.
 >      - Scripts de post-instalación (`postinst`: recarga udev, `systemctl --user daemon-reload`, actualización de iconos) y post-remoción (`postrm`).
->   2. Despachar tanda de revisión inicial de Fase 5 a los 4 subagentes (`haiku`, `deepseek`, `muse`, `luna`) usando la plantilla canónica `scripts/templates/template-tanda.sh`.
->   3. Construir el paquete `.deb` reproducible mediante `cargo-deb` o herramientas nativas Debian.
+>   4. Despachar tanda de revisión inicial de Fase 5 a los 4 subagentes (`haiku`, `deepseek`, `muse`, `luna`) usando la plantilla canónica `scripts/templates/template-tanda.sh` (con `ReadOnlyPaths` si solo auditan la spec, o con Git Worktree aislado `../mx-wt-<alias>` únicamente si van a generar código).
+>   5. Construir y verificar el paquete `.deb` reproducible mediante `cargo-deb` o herramientas nativas Debian.
 
 ---
 

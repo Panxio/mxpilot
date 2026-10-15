@@ -30,15 +30,16 @@ Para preservar la iniciativa de los agentes sin poner en riesgo la estabilidad d
 
 1. **La rama principal (`master` / `main`) es sagrada:**
    * Ningún subagente debe operar directamente sobre el directorio de trabajo de la rama principal.
-2. **Uso de Ramas Feature Dedicadas:**
-   * Cada fase o unidad de trabajo no trivial debe residir en una rama (`feature/<nombre-fase>`).
-   * Al concluir y verificar todos los árbitros objetivos (tests, linter, compilación), se realiza el merge controlado (`git merge --no-ff`) hacia `master`.
-3. **Uso de Git Worktrees Aislados para Tandas Multi-Agente:**
-   * Cuando se despachen agentes con permiso de generar código o tests, cada uno debe operar en su propio directorio de trabajo aislado:
+2. **Uso de Ramas Feature Dedicadas por Fase:**
+   * En cada inicio de fase, el orquestador crea una rama Git propia (`feature/f<n>-<nombre>`) para aislar el desarrollo de la fase respecto a `master`.
+   * Al concluir la fase y verificar todos los árbitros objetivos (tests, linter, compilación, auditorías), se realiza el merge controlado (`git merge --no-ff`) hacia `master`.
+3. **Criterio Estricto para Creación de Git WorkTrees Aislados:**
+   * **¿Cuándo se crea un WorkTree?** ÚNICAMENTE cuando se despachen subagentes que vayan a escribir, modificar o compilar código/tests de forma autónoma:
      ```bash
      git worktree add ../mx-wt-<alias> -b feat/<alias>-<tarea>
      ```
-   * El orquestador es quien inspecciona los diffs en el worktree, extrae lo que sirve y descarta lo riesgoso antes de fusionar.
+   * **¿Cuándo NO se crea un WorkTree?** Si la tarea del subagente es de mera lectura/auditoría (revisión de arquitectura, métricas, diseño), o si el orquestador está implementando directamente en la rama de la fase, **no se crea un WorkTree** para no sobrecargar el disco, el contexto ni el caché.
+   * El orquestador es quien inspecciona los diffs en el worktree del subagente, extrae lo que sirve y descarta lo riesgoso antes de fusionar.
 
 ---
 
