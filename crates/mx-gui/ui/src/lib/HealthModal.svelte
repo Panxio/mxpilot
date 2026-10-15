@@ -96,12 +96,10 @@
 
           <!-- Métricas de Memoria VmRSS -->
           <div class="p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/30">
-            <div class="flex items-center justify-between text-indigo-300 font-semibold mb-2">
-              <span class="flex items-center space-x-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                <span>Consumo de Memoria RAM</span>
-              </span>
-              <span class="text-[10px] font-mono text-slate-400 uppercase">Residente (RSS)</span>
+            <div class="flex items-center space-x-2 text-indigo-300 font-semibold mb-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+              <span>Consumo de Memoria RAM</span>
+              <span class="text-[10px] font-mono text-slate-400 uppercase font-normal">(Residente / RSS)</span>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
