@@ -7,16 +7,14 @@
 
 > ### 📌 RESUMEN EJECUTIVO DE RELEVO RÁPIDO (LEER AL INICIAR SESIÓN)
 > - **Última Sesión Cerrada:** Sesión 16: *Publicación Oficial en GitHub (`Panxio/mxpilot`), Auditoría Cruzada Colegiada con Rotación de Roles, Blueprint SVG MX Vertical Fotorrealista y Refinamiento Estético Final*.
-> - **Estado Global del Proyecto:** Fases 0 a 5 **100% COMPLETADAS, AUDITADAS Y PUBLICADAS EN GITHUB**.
-> - **Fases Aprobadas:**
->   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-core`/`mx-probe`) — Handshake HID++ 2.0/4.x por cable/Dongle/BT.
->   - ✅ **Fase 1:** Divert de Botón Superior & Inyección Virtual (`mx-uinput`, `mx-cli`) — RAII y Down/Up verificado.
->   - ✅ **Fase 2:** Reglas `udev` (`70-mx-options.rules`) — Permisos de usuario sin `sudo`.
->   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS < 3 MB, parada limpia <0.1 s, fail-safe Zero Stuck Keys.
->   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — Blueprint SVG fotorrealista de 57°, multi-CID divert, restauración nativa `SystemDefault`, navegación de escritorios, icono esmeralda Opción 2.
->   - ✅ **Fase 4.5:** Endurecimiento & Ethical Hacking Web (`mx-gui` + `mx-daemon`) — CSP estricta, capabilities mínimas, sandboxing systemd 4.0, fuzzing adversarial (58 tests Rust, 13 tests JS, 0 CVEs).
->   - ✅ **Fase 5:** Empaquetado & Distribución Limpia (`mxpilot` / `mx-options_0.1.0-1_amd64.deb` + `packaging/rpm/mx-options.spec` + `.github/workflows/release.yml`) — Paquete `.deb` de **4.15 MB** (<15 MB objetivo), 0 rutas residuales, permisos canónicos, garantía Zero Dead Buttons en `prerm`, y CI/CD en GitHub.
-> - **Estado:** REPOSITORIO PÚBLICO EN VIVO EN GITHUB: `https://github.com/Panxio/mxpilot`. LISTO PARA TAG v0.1.0.
+> - **Sesión Entrante (Sesión 17 — Modelo: Gemini 4.0 en Antigravity 2.0):**
+>   - **Misión de Gemini 4.0:** Ejecutar la **Auditoría Final Pre-Release (Fase 6)** sobre la especificación [`specs/F6-polish-bilingual-rpm.md`](specs/F6-polish-bilingual-rpm.md) y liderar la implementación de los 4 ejes:
+>     1. 📦 **Empaquetado Dual (.deb + .rpm):** Creación de `scripts/package-rpm.sh` y soporte CI en `.github/workflows/release.yml`.
+>     2. 🧹 **Limpieza del Repositorio Público:** Desacoplar scripts de tandas y bitácoras internas hacia carpetas ignoradas por git, emulando la pureza de `Panxio/lekto`.
+>     3. 🌐 **Soporte Bilingüe en la GUI (i18n ES/EN):** Módulo reactivo Svelte (`i18n.js`), selector `ES | EN` en la barra superior y persistencia en `localStorage`.
+>     4. 📖 **Documentación Bilingüe:** `README.md` (Español) y `README.en.md` (Inglés) estructurados al estilo de `Panxio/lekto`.
+> - **Estado Global del Proyecto:** Fases 0 a 5 **100% COMPLETADAS Y APROBADAS**. Fase 6 especificada y lista para auditoría y ejecución de Gemini 4.0.
+> - **Repositorio Oficial:** `https://github.com/Panxio/mxpilot` (rama `master` limpia y sincronizada).
 
 ---
 
@@ -544,4 +542,34 @@ Fase 5: Empaquetado .deb / .rpm        [█████████████�
   - Corregido el problema de desalineación óptica: la etiqueta `(Residente / RSS)` se unificó a la izquierda junto a `Consumo de Memoria RAM`.
   - Ambas tarjetas (`Daemon` e `Interfaz`) quedan simétricas y alineadas a la izquierda, armonizando con las 8 tarjetas superiores.
   - Validado en vivo y aprobado por el usuario.
-- **Estado:** ✅ **SESIÓN 16 CERRADA. PROYECTO 100% OPERATIVO, VERIFICADO Y PUBLICADO EN GITHUB (`Panxio/mxpilot`). LISTO PARA TAG v0.1.0.**
+- **Estado:** ✅ **SESIÓN 16 CERRADA. REPOSITORIO PUBLICADO EN GITHUB (`https://github.com/Panxio/mxpilot`).**
+
+---
+
+### Sesión 17 (2026-10-15) — Preparación para Auditoría Final con Gemini 4.0 en Antigravity 2.0 y Hoja de Ruta Fase 6
+- **Contexto del Relevo:**
+  - El usuario ha solicitado pausar el lanzamiento del tag `v0.1.0` para incorporar requisitos indispensables de producto inspirados en la excelencia de su proyecto [`Panxio/lekto`](https://github.com/Panxio/lekto).
+  - El nuevo modelo **Gemini 4.0** de Google (recientemente habilitado en el selector de modelos de Antigravity 2.0) asumirá la auditoría técnica final y el liderazgo de la Fase 6 antes del empaquetado release.
+- **Especificación SDD Creada:** [`specs/F6-polish-bilingual-rpm.md`](specs/F6-polish-bilingual-rpm.md).
+- **Hoja de Ruta de los 4 Ejes para Gemini 4.0:**
+  1. 📦 **Empaquetado RPM Oficial (Fedora / RHEL / openSUSE):**
+     - Crear script local determinista `scripts/package-rpm.sh`.
+     - Actualizar `packaging/rpm/mx-options.spec` con URL oficial y garantías Zero Dead Buttons en `%preun`.
+     - Integrar job de empaquetado RPM en `.github/workflows/release.yml` para publicación simultánea dual (.deb + .rpm) con sumas `SHA256SUMS.txt`.
+  2. 🧹 **Limpieza del Repositorio Público (Estándar Lekto):**
+     - Desacoplar del árbol público de git el andamiaje interno de orquestación de subagentes (`scripts/run-*-tanda.sh`, `scripts/run-dev.sh`, `docs/SUBAGENTES.md`, `docs/BRAINSTORMING*`, `docs/PROMPT_SVG*`, `hooks/`).
+     - Preservar herramientas locales en directorio ignorado por git (`.internal/` o `.gitignore`), garantizando un repo público 100% enfocado en el producto.
+  3. 🌐 **Soporte Bilingüe Nativo en GUI (i18n Español / Inglés):**
+     - Tienda reactiva ligera en Svelte (`crates/mx-gui/ui/src/lib/i18n.js`) sin librerías externas pesadas.
+     - Detección automática del idioma del sistema (`navigator.language`).
+     - Selector interactivo `ES | EN` en la barra superior de la app.
+     - Persistencia de selección en `localStorage`.
+     - Diccionario bilingüe completo: estados, batería, botones CIDs, categorías, acciones del ActionPicker y modal de diagnóstico.
+  4. 📖 **Documentación Bilingüe de Cara al Público (Estándar Lekto):**
+     - Cabecera con selector: `[English](README.en.md)` en `README.md` y `[Español](README.md)` en `README.en.md`.
+     - Resumen ejecutivo conciso, blueprint visual, tabla de rendimiento y arquitectura (Rust + Svelte, < 3 MB RAM, 4.15 MB paquete), lista de funciones, requisitos e instalación (.deb / .rpm).
+- **Consigna para Gemini 4.0 al Iniciar la Sesión 17:**
+  - Leer primero este bloque y la especificación [`specs/F6-polish-bilingual-rpm.md`](specs/F6-polish-bilingual-rpm.md).
+  - Realizar la auditoría técnica crítica sobre los 4 ejes propuestos.
+  - Proceder con la implementación de las soluciones consensuadas asegurando el paso del arnés `cargo test`, `npm test` y `scripts/audit-packages.sh`.
+
