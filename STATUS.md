@@ -6,17 +6,17 @@
 > Creado: 2026-10-13
 
 > ### 📌 RESUMEN EJECUTIVO DE RELEVO RÁPIDO (LEER AL INICIAR SESIÓN)
-> - **Última Sesión Cerrada:** Sesión 15: *Fase 5: Empaquetado (.deb y .rpm), Garantía Zero Dead Buttons en Desinstalación, Arnés de Auditoría Objetiva y CI/CD en GitHub Releases*.
-> - **Estado Global del Proyecto:** Fases 0, 1, 2, 3, 4, 4.5 y 5 **APROBADAS Y VERIFICADAS EN HARDWARE Y ARTEFACTOS REALES**.
+> - **Última Sesión Cerrada:** Sesión 16: *Publicación Oficial en GitHub (`Panxio/mxpilot`), Auditoría Cruzada Colegiada con Rotación de Roles, Blueprint SVG MX Vertical Fotorrealista y Refinamiento Estético Final*.
+> - **Estado Global del Proyecto:** Fases 0 a 5 **100% COMPLETADAS, AUDITADAS Y PUBLICADAS EN GITHUB**.
 > - **Fases Aprobadas:**
->   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-probe`) — 29 features volcadas, kill-gate superado.
+>   - ✅ **Fase 0:** Sonda & Protocolo HID++ (`mx-core`/`mx-probe`) — Handshake HID++ 2.0/4.x por cable/Dongle/BT.
 >   - ✅ **Fase 1:** Divert de Botón Superior & Inyección Virtual (`mx-uinput`, `mx-cli`) — RAII y Down/Up verificado.
 >   - ✅ **Fase 2:** Reglas `udev` (`70-mx-options.rules`) — Permisos de usuario sin `sudo`.
->   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS 784 KB (<15 MB), parada limpia <0.1 s, fail-safe Zero Stuck Keys verificado.
->   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — Multi-CID divert, restauración nativa `SystemDefault`, navegación de escritorios, icono esmeralda Opción 2, layout Top-Pinning en Fullscreen validado visualmente por el usuario.
->   - ✅ **Fase 4.5:** Endurecimiento & Ethical Hacking Web (`mx-gui` + `mx-daemon`) — CSP estricta de producción sin eval, capabilities mínimas, sandboxing systemd 4.0 OK, 21 tests de fuzzing adversarial (58 tests Rust, 13 tests JS, 0 CVEs).
->   - ✅ **Fase 5:** Empaquetado & Distribución Limpia (`mx-options_0.1.0-1_amd64.deb` + `packaging/rpm/mx-options.spec` + `.github/workflows/release.yml`) — Paquete `.deb` de **4.15 MB** (<15 MB objetivo), 0 rutas residuales, permisos 100% canónicos (`root:root`, `0755`/`0644`), `dpkg-shlibdeps` exacto con compatibilidad t64, garantía Zero Dead Buttons verificada en `prerm`/`%preun`, y CI/CD automatizado para GitHub Releases.
-> - **Estado:** MVP 100% COMPLETADO Y LISTO PARA DISTRIBUCIÓN PÚBLICA.
+>   - ✅ **Fase 3:** Daemon `systemd --user` & Socket IPC (`mx-daemon`) — 28/28 tests pasando, 0 clippy warnings, RSS < 3 MB, parada limpia <0.1 s, fail-safe Zero Stuck Keys.
+>   - ✅ **Fase 4:** GUI Tauri v2 (`mx-gui`) — Blueprint SVG fotorrealista de 57°, multi-CID divert, restauración nativa `SystemDefault`, navegación de escritorios, icono esmeralda Opción 2.
+>   - ✅ **Fase 4.5:** Endurecimiento & Ethical Hacking Web (`mx-gui` + `mx-daemon`) — CSP estricta, capabilities mínimas, sandboxing systemd 4.0, fuzzing adversarial (58 tests Rust, 13 tests JS, 0 CVEs).
+>   - ✅ **Fase 5:** Empaquetado & Distribución Limpia (`mxpilot` / `mx-options_0.1.0-1_amd64.deb` + `packaging/rpm/mx-options.spec` + `.github/workflows/release.yml`) — Paquete `.deb` de **4.15 MB** (<15 MB objetivo), 0 rutas residuales, permisos canónicos, garantía Zero Dead Buttons en `prerm`, y CI/CD en GitHub.
+> - **Estado:** REPOSITORIO PÚBLICO EN VIVO EN GITHUB: `https://github.com/Panxio/mxpilot`. LISTO PARA TAG v0.1.0.
 
 ---
 
@@ -514,9 +514,34 @@ Fase 5: Empaquetado .deb / .rpm        [█████████████�
   - **Linter Rust (`cargo clippy --workspace --all-targets -- -D warnings`):** **0 warnings** ✅
   - **Tests Unitarios Frontend (`npm --prefix crates/mx-gui/ui test`):** **13/13 tests pasando** ✅
   - **Invariante Zero Dead Buttons:** Verificado empíricamente en `prerm` y `%preun`.
-- **Estado:** ✅ **FASE 5 APROBADA Y CERRADA. SUITE MX-OPTIONS-LINUX LISTA PARA PUBLICACIÓN EN GITHUB.**
+- **Estado:** ✅ **FASE 5 APROBADA Y CERRADA.**
 
+---
 
-
-
-
+### Sesión 16 (2026-10-15) — Publicación Oficial en GitHub (Panxio/mxpilot), Auditoría Cruzada Colegiada, Blueprint SVG MX Vertical Fotorrealista y Refinamiento Estético Final
+- **Contexto y Creación del Repositorio Oficial:**
+  - Decisión estratégica de visibilidad pública acordada con el usuario para aprovechar cuotas de GitHub Actions ilimitadas y gratuitas para proyectos Open Source.
+  - Asignación de identidad oficial: **MX Pilot** (`Panxio/mxpilot`).
+  - Creación del repositorio remoto en GitHub vía API (`https://github.com/Panxio/mxpilot`).
+  - Resolución del error `GH007` (privacidad de correo en GitHub) configurando el email oficial noreply (`7326726+Panxio@users.noreply.github.com`) y reescribiendo la autoría del historial con `git filter-branch`.
+- **Tanda Colegiada de Auditoría Cruzada con Rotación de Roles:**
+  - Despachada mediante `scripts/run-f5-audit-cierre-cruzada-tanda.sh` bajo `systemd-run -p MemoryMax=2G`:
+    - `luna` (asumiendo rol de Criterios de Aceptación y Testing de Haiku).
+    - `muse` (asumiendo rol de Kernel & Arquitectura de DeepSeek).
+    - `deepseek` (asumiendo rol de Zero Dead Buttons y Robustez de Muse).
+    - `haiku` (asumiendo rol de Empaquetado FHS, Metadatos y Estándares de Luna).
+  - Dictamen consolidado en `.superpowers/audit_cierre_f5_cruzada/reports/00_RESUMEN_EJECUTIVO_COLEGIADO.md`.
+  - Consenso unánime: código apto para producción, arquitectura sólida y cumplimiento estricto de la Regla de Oro.
+- **Integración del Nuevo Blueprint SVG de Alta Definición:**
+  - El usuario suministró un blueprint vectorial de alta fidelidad del Logitech MX Vertical con ángulo ergonómico de 57°, textura de estrías de pulgar de doble relieve, faldón de apoyo, puerto USB-C y placa superior de aluminio anodizado.
+  - Integrado en `crates/mx-gui/ui/src/lib/MouseViewer.svelte` preservando 100% la reactividad, accesibilidad ARIA y asignación para los 4 CIDs:
+    - CID `0x00FD` (Botón Superior / DPI).
+    - CID `0x0052` (Rueda de Scroll / Middle Click).
+    - CID `0x0056` (Botón Lateral Adelante / Forward).
+    - CID `0x0053` (Botón Lateral Atrás / Back).
+- **Refinamiento Estético y UX en Modal de Diagnóstico:**
+  - Eliminada la frase interna de metodología `"Presupuesto de Memoria (Pilar 7)"`.
+  - Corregido el problema de desalineación óptica: la etiqueta `(Residente / RSS)` se unificó a la izquierda junto a `Consumo de Memoria RAM`.
+  - Ambas tarjetas (`Daemon` e `Interfaz`) quedan simétricas y alineadas a la izquierda, armonizando con las 8 tarjetas superiores.
+  - Validado en vivo y aprobado por el usuario.
+- **Estado:** ✅ **SESIÓN 16 CERRADA. PROYECTO 100% OPERATIVO, VERIFICADO Y PUBLICADO EN GITHUB (`Panxio/mxpilot`). LISTO PARA TAG v0.1.0.**
