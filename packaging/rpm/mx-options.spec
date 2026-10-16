@@ -1,9 +1,12 @@
 %global debug_package %{nil}
 %define _build_id_links none
 
+%{!?pkg_version: %define pkg_version 0.1.0}
+%{!?pkg_release: %define pkg_release 1}
+
 Name:           mx-options
-Version:        %{?!pkg_version:0.1.0}
-Release:        %{?!pkg_release:1}%{?dist}
+Version:        %{pkg_version}
+Release:        %{pkg_release}%{?dist}
 Summary:        Control y configuracion nativa para ratones Logitech MX en Linux
 License:        GPL-2.0-only
 URL:            https://github.com/Panxio/mxpilot
