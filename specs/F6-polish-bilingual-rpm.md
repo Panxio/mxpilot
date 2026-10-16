@@ -83,10 +83,34 @@
 
 ---
 
-## 3. Plan de Verificación y Auditoría con Gemini 4.0 (Pilar 5 & Pilar 6)
-- Someter esta especificación y la base de código actual a una auditoría exhaustiva con el nuevo modelo `opencode-go/gemini-4-argon-contributor` (Gemini 4.0).
-- Preguntas clave para la auditoría de Gemini 4.0:
-  1. ¿Existen inconsistencias o riesgos en el empaquetado dual RPM / DEB en GitHub Actions?
-  2. ¿Qué recomendaciones técnicas aporta para el script `%preun` y `%postun` en distribuciones basadas en RPM con SELinux activo?
-  3. ¿Es óptima la arquitectura de i18n reactiva propuesta en Svelte sin sobrecargar el bundle?
-  4. ¿Qué aspectos adicionales de UX o empaquetado deben ser considerados antes de sellar el tag `v0.1.0`?
+## 3. Dictamen de Auditoría Técnica (Gemini 4.0) y Resoluciones Implementadas
+
+### 3.1 ¿Existen inconsistencias o riesgos en el empaquetado dual RPM / DEB en GitHub Actions?
+- **Hallazgo:** Construir un RPM binario desde un runner `ubuntu-24.04` (o Fedora) a partir de ejecutables Rust pre-compilados y *stripped* presenta tres riesgos clásicos en `rpmbuild`:
+  1. Generación fallida de paquetes `-debuginfo` o enlaces `.build-id` duplicados en `/usr/lib/.build-id/`.
+  2. El generador automático `find-requires` en un host Debian puede inyectar símbolos específicos de glibc/Debian incompatibles con la base de datos RPM de Fedora/openSUSE.
+  3. Desalineación de versión cuando el tag de Git avanza y el `.spec` mantiene una versión estática.
+- **Resolución Aplicada:**
+  - Incorporadas directivas `%global debug_package %{nil}`, `%define _build_id_links none` y `AutoReqProv: no` en [`packaging/rpm/mx-options.spec`](../packaging/rpm/mx-options.spec), declarando explícitamente las dependencias nativas de Fedora/RHEL (`webkit2gtk4.1`, `gtk3`, `libayatana-appindicator-gtk3`, `systemd`, `systemd-udev`, `procps-ng`).
+  - Parametrizadas las macros `%{?!pkg_version:0.1.0}` y `%{?!pkg_release:1}` en el `.spec`, alimentadas dinámicamente por [`scripts/package-rpm.sh`](../scripts/package-rpm.sh) desde `Cargo.toml` o `${GITHUB_REF_NAME#v}`.
+  - Unificadas todas las URLs de metadatos (`Homepage`, `URL`, `Source`) a `https://github.com/Panxio/mxpilot`.
+  - Extendido el arnés [`scripts/audit-packages.sh`](../scripts/audit-packages.sh) para auditar tanto `.deb` como `.rpm` (tamaño `< 15 MB`, propietarios `root:root`, modos `0755/0644`, cero fugas de `/home/panxio`, scripts de mantenedor y dependencias).
+
+### 3.2 ¿Qué recomendaciones técnicas aporta para `%preun` y `%postun` en distribuciones RPM con SELinux activo?
+- **Hallazgo:** En Fedora y RHEL con SELinux en modo `enforcing` (política `targeted`), `rpm-plugin-selinux` etiqueta automáticamente los archivos instalados en `/usr/bin`, `/usr/lib/udev/rules.d` y `/usr/lib/systemd/user` con sus contextos canónicos (`bin_t`, `udev_rules_t`, `systemd_unit_file_t`). Sin embargo, si cualquier comando dentro de `%post`, `%preun` o `%postun` devuelve un código distinto de cero (por ejemplo, si `pkill` es bloqueado por una política MLS personalizada o no encuentra procesos activos), `rpm`/`dnf` aborta la transacción, dejando paquetes huérfanos imposibles de desinstalar.
+- **Resolución Aplicada:**
+  - En `%preun`, la parada **Zero Dead Buttons** se ejecuta exclusivamente en desinstalación definitiva (`if [ "$1" = "0" ]; then ... fi`), preservando el servicio activo durante actualizaciones (`$1 >= 1`).
+  - Todos los scriptlets (`%post`, `%preun`, `%postun`) están protegidos con `2>/dev/null || true` y finalizan explícitamente con `exit 0`.
+  - Declarados permisos explícitos `%defattr(0644,root,root,0755)` y `%attr(0755,root,root)` para los 5 binarios en `%files`.
+
+### 3.3 ¿Es óptima la arquitectura de i18n reactiva propuesta en Svelte sin sobrecargar el bundle?
+- **Hallazgo:** Librerías externas como `svelte-i18n` o `i18next` añaden entre 15 KB y 45 KB minificados y dependencias transitivas innecesarias para un esquema de 2 idiomas (`es` / `en`). Además, un cambio de idioma en el frontend dejaría los textos del menú contextual del System Tray (manejado por Rust en `libayatana-appindicator`) en el idioma anterior si no se sincronizan ambas capas.
+- **Resolución Aplicada:**
+  - Implementado [`crates/mx-gui/ui/src/lib/i18n.js`](../crates/mx-gui/ui/src/lib/i18n.js) con stores nativos de Svelte (`writable` + `derived`), sumando apenas ~3 KB al bundle y **0 dependencias externas**.
+  - Paridad del 100% verificada por test unitario sobre las **93 claves** de `DICTIONARY.es` y `DICTIONARY.en`.
+  - Añadido el comando Tauri `set_locale` en [`crates/mx-gui/src/commands.rs`](../crates/mx-gui/src/commands.rs) y actualización reactiva en caliente de los `MenuItem` de [`crates/mx-gui/src/tray.rs`](../crates/mx-gui/src/tray.rs), sincronizando instantáneamente el menú de bandeja del sistema (`Mostrar/Show`, `Batería/Battery`, `Reiniciar Daemon/Restart Daemon`, `Salir/Quit`) al alternar el selector `ES | EN`.
+
+### 3.4 ¿Qué aspectos adicionales de UX o empaquetado deben ser considerados antes de sellar el tag `v0.1.0`?
+- **Higiene del árbol Git:** Se trasladaron los scripts de tandas de subagentes, bitácoras internas y hooks a `.internal/` (ignorado por Git) y se desacoplaron los esquemas autogenerados `crates/mx-gui/gen/schemas/`, logrando un árbol público idéntico en pureza a `Panxio/lekto`.
+- **Tests de Frontend en CI:** Se incorporó el paso `npm --prefix crates/mx-gui/ui test` en `.github/workflows/release.yml` para que las 16 pruebas de acciones e internacionalización actúen como compuerta dura antes de empaquetar.
+

@@ -1,5 +1,6 @@
 <script>
-  import { selectedCid, uiState, statusData, BUTTON_DEFINITIONS } from './stores.js';
+  import { selectedCid, uiState, statusData } from './stores.js';
+  import { locale, t, localizedButtons, getLocalizedActionSummary } from './i18n.js';
 
   function selectButton(cid) {
     selectedCid.set(cid);
@@ -10,23 +11,6 @@
       e.preventDefault();
       selectButton(cid);
     }
-  }
-
-  function getButtonActionName(cid, mapping) {
-    if (!mapping || !mapping[cid]) return 'Por defecto del sistema';
-    const act = mapping[cid];
-    if (act.type === 'SingleKey') {
-      if (act.key === 'KEY_LEFTMETA' || act.key === 'SUPER' || act.key === 'META') return 'Super (Actividades)';
-      if (act.key === 'KEY_MUTE') return 'Silenciar';
-      if (act.key === 'KEY_PLAYPAUSE') return 'Play / Pausa';
-      return act.key;
-    }
-    if (act.type === 'KeyCombo') {
-      return `${act.modifiers.join('+')}+${act.key}`.replace(/KEY_/g, '');
-    }
-    if (act.type === 'MouseButton') return act.button.replace('BTN_', 'Botón ');
-    if (act.type === 'None') return 'Deshabilitado';
-    return 'Personalizado';
   }
 </script>
 
@@ -41,11 +25,11 @@
     </div>
     {#if $uiState !== 'Connected'}
       <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 border border-amber-500/30 text-amber-400">
-        {$uiState === 'DaemonDown' ? 'Servicio Inactivo' : 'Desconectado'}
+        {$uiState === 'DaemonDown' ? $t('viewer_service_inactive') : $t('viewer_disconnected')}
       </span>
     {:else}
       <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800/90 border border-slate-700/80 text-slate-400 font-mono">
-        Blueprint Interactivo
+        {$t('viewer_interactive_blueprint')}
       </span>
     {/if}
   </div>
@@ -142,7 +126,7 @@
       <ellipse cx="185" cy="276" rx="142" ry="12" fill="url(#floor-shadow)" />
 
       <!-- ==================== 1. RUEDA DE SCROLL (CID 0x0052) ==================== -->
-      <g class="cursor-pointer group" on:click={() => selectButton(0x0052)} on:keydown={(e) => handleKeyDown(e, 0x0052)} role="button" tabindex="0" aria-label="Rueda Central Scroll">
+      <g class="cursor-pointer group" on:click={() => selectButton(0x0052)} on:keydown={(e) => handleKeyDown(e, 0x0052)} role="button" tabindex="0" aria-label={$t('btn_wheel_name')}>
         <g id="svg-btn-wheel" filter={$selectedCid === 0x0052 ? 'url(#selectedGlow)' : 'url(#interactive-glow)'} class="transition-all duration-200 group-hover:brightness-125">
           <!-- Arco compacto que asoma discretamente por el perfil izquierdo -->
           <path d="M 97,134 
@@ -295,7 +279,7 @@
       </g>
 
       <!-- ==================== 8. BOTÓN SUPERIOR DPI (CID 0x00FD) ==================== -->
-      <g class="cursor-pointer group" on:click={() => selectButton(0x00FD)} on:keydown={(e) => handleKeyDown(e, 0x00FD)} role="button" tabindex="0" aria-label="Botón Superior DPI">
+      <g class="cursor-pointer group" on:click={() => selectButton(0x00FD)} on:keydown={(e) => handleKeyDown(e, 0x00FD)} role="button" tabindex="0" aria-label={$t('btn_top_name')}>
         <g id="svg-btn-top" filter={$selectedCid === 0x00FD ? 'url(#selectedGlow)' : 'url(#interactive-glow)'} class="transition-all duration-200 group-hover:brightness-125">
           <!-- Bisel exterior encastrado en el aluminio -->
           <path d="M 197,36 
@@ -341,7 +325,7 @@
                C 183.5,82.5 185.5,79.5 189,78 Z" fill="#060911" stroke="#334155" stroke-width="0.9" stroke-linejoin="round" />
 
       <!-- Botón Lateral Delantero - Forward (CID 0x0056) -->
-      <g class="cursor-pointer group" on:click={() => selectButton(0x0056)} on:keydown={(e) => handleKeyDown(e, 0x0056)} role="button" tabindex="0" aria-label="Botón Lateral Adelante">
+      <g class="cursor-pointer group" on:click={() => selectButton(0x0056)} on:keydown={(e) => handleKeyDown(e, 0x0056)} role="button" tabindex="0" aria-label={$t('btn_forward_name')}>
         <g id="svg-btn-forward" filter={$selectedCid === 0x0056 ? 'url(#selectedGlow)' : 'url(#interactive-glow)'} class="transition-all duration-200 group-hover:brightness-125">
           <path d="M 190,79.5 
                    L 204.5,72.5 
@@ -360,7 +344,7 @@
       </g>
 
       <!-- Botón Lateral Trasero - Back (CID 0x0053) -->
-      <g class="cursor-pointer group" on:click={() => selectButton(0x0053)} on:keydown={(e) => handleKeyDown(e, 0x0053)} role="button" tabindex="0" aria-label="Botón Lateral Atrás">
+      <g class="cursor-pointer group" on:click={() => selectButton(0x0053)} on:keydown={(e) => handleKeyDown(e, 0x0053)} role="button" tabindex="0" aria-label={$t('btn_back_name')}>
         <g id="svg-btn-back" filter={$selectedCid === 0x0053 ? 'url(#selectedGlow)' : 'url(#interactive-glow)'} class="transition-all duration-200 group-hover:brightness-125">
           <path d="M 206.5,71.5 
                    L 217.5,66 
@@ -389,9 +373,9 @@
 
   <!-- Fila de botones para selección rápida directamente bajo el blueprint -->
   <div class="grid grid-cols-2 gap-2 w-full max-w-[360px] mt-2 flex-shrink-0">
-    {#each BUTTON_DEFINITIONS as btn}
-      {@const actName = getButtonActionName(btn.cid, $statusData.mapping)}
-      {@const isCustom = actName !== 'Por defecto del sistema'}
+    {#each $localizedButtons as btn}
+      {@const actName = getLocalizedActionSummary(btn.cid, $statusData.mapping, $locale)}
+      {@const isCustom = actName !== $t('viewer_system_default')}
       <button
         type="button"
         on:click={() => selectButton(btn.cid)}

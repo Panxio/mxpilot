@@ -163,7 +163,7 @@ Maintainer: MX Options Linux Team <mx-options@panxio.dev>
 Installed-Size: $INSTALLED_SIZE
 Depends: $FINAL_DEPENDS
 Recommends: libgtk-3-bin, desktop-file-utils
-Homepage: https://github.com/panxio/mx-options-linux
+Homepage: https://github.com/Panxio/mxpilot
 Description: Control y configuracion nativa para ratones Logitech MX en Linux
  mx-options es una suite ligera y eficiente para configurar ratones
  Logitech MX Vertical y serie MX bajo Linux, sin permisos de root.

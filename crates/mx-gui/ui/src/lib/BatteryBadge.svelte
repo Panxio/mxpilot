@@ -1,5 +1,6 @@
 <script>
-  import { statusData, uiState, lastUpdated } from './stores.js';
+  import { statusData, uiState } from './stores.js';
+  import { t } from './i18n.js';
 
   let batteryLevel;
   let batteryStatus;
@@ -7,7 +8,7 @@
 
   $: isConnected = $uiState === 'Connected';
   $: batteryLevel = $statusData.battery_level !== null && $statusData.battery_level !== undefined ? $statusData.battery_level : null;
-  $: batteryStatus = $statusData.battery_status || 'Desconocido';
+  $: batteryStatus = $statusData.battery_status || $t('battery_unknown');
 
   function getBatteryColor(level, connected) {
     if (!connected) return 'text-slate-500 border-slate-700 bg-slate-800/40';
@@ -18,7 +19,10 @@
   }
 </script>
 
-<div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors duration-200 {getBatteryColor(batteryLevel, isConnected)}">
+<div
+  title={isConnected ? `${$t('battery_tooltip_connected')}: ${batteryStatus}` : $t('battery_tooltip_disconnected')}
+  class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors duration-200 {getBatteryColor(batteryLevel, isConnected)}"
+>
   <!-- Ícono SVG de Batería con relleno dinámico -->
   <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
     <rect x="2" y="6" width="17" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
@@ -39,7 +43,7 @@
     {#if batteryLevel !== null}
       {batteryLevel}%
       {#if !isConnected}
-        <span class="text-[10px] text-slate-400 font-normal ml-0.5">(stale)</span>
+        <span class="text-[10px] text-slate-400 font-normal ml-0.5">{$t('battery_stale')}</span>
       {/if}
     {:else}
       --

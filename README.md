@@ -1,105 +1,114 @@
-# MX Pilot (mxpilot)
+[English](README.en.md)
 
-<div align="center">
-  <h3>Suite nativa, ultraliviana y ergonómica de configuración y desvío de botones para ratones Logitech MX en Linux</h3>
+# MX Pilot
 
-  [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](LICENSE)
-  [![Platform](https://img.shields.io/badge/Platform-Linux%20(Wayland%20%2F%20X11)-orange.svg)](https://github.com/Panxio/mxpilot)
-  [![Rust](https://img.shields.io/badge/Backend-Rust%201.80+-red.svg)](https://www.rust-lang.org/)
-  [![Tauri](https://img.shields.io/badge/GUI-Tauri%20v2%20%2B%20Svelte%205-purple.svg)](https://tauri.app/)
-  [![Package](https://img.shields.io/badge/Package-.deb%20(4.15%20MB)-emerald.svg)](https://github.com/Panxio/mxpilot/releases)
-</div>
+Suite nativa, ultraliviana y ergonómica para configurar ratones Logitech MX en Linux.
 
----
+**MX Pilot** (`mx-options`) reemplaza el software oficial *Logitech Options / Options+* en Linux mediante comunicación directa con el protocolo **HID++ 2.0/4.5** e inyección de eventos a nivel de kernel por **`/dev/uinput`**, operando íntegramente en espacio de usuario sin privilegios de `root`.
 
-**MX Pilot** es una solución open-source diseñada para cubrir el vacío que deja Logitech al no ofrecer software oficial (*Logitech Options / Options+*) para Linux. Desarrollado en **Rust**, **Tauri v2** y **Svelte 5**, permite reprogramar los botones del ratón **Logitech MX Vertical** (y dispositivos de la familia MX) mediante el protocolo nativo **HID++ 2.0/4.x** e inyección de eventos por **/dev/uinput**, sin requerir privilegios de `root` ni colgar el sistema.
+## Rendimiento y arquitectura
 
----
+A diferencia de las utilidades pesadas basadas en Electron, MX Pilot desacopla un daemon nativo en Rust (`mx-daemon`) de su interfaz gráfica en Tauri v2 + Svelte 5 (`mx-gui`, renderizada sobre el motor WebKitGTK del sistema sin Node.js en tiempo de ejecución):
 
-## ✨ Características Principales
+- **Memoria RAM del daemon (`mx-daemon`):** ~2.3 MB RSS en reposo
+- **Paquete instalador (`.deb` / `.rpm`):** 4.15 MB (incluye los 5 binarios, iconos y reglas)
+- **Latencia de extremo a extremo (`hidraw` → `uinput`):** menos de 5 ms
+- **Puntuación de aislamiento `systemd-analyze security`:** 4.0 OK
 
-* 🎯 **Button Diversion Completo (HID++ 2.0/4.x):**
-  Desvía eventos del botón superior de DPI (`CID 0x00FD`), botones laterales de pulgar (`0x0056` Adelante, `0x0053` Atrás) y clic de rueda central (`0x0052`), permitiendo asignarles cualquier acción o devolverlos a su comportamiento de fábrica (`SystemDefault`) en caliente.
-* ⌨️ **Emulación de Entrada por `/dev/uinput` a nivel de Kernel:**
-  Totalmente compatible con **Wayland (GNOME, KDE Plasma, Sway, Hyprland)** y **X11**. Emula pulsaciones reales (`Super/Meta`, `Ctrl+C`, `Ctrl+V`, `Silenciar`, `Play/Pausa`) y navegación de escritorios virtuales (`Ctrl+Alt+→`, `Ctrl+Alt+←`).
-* 🛡️ **Garantía Zero Dead Buttons & Zero Stuck Keys:**
-  Arquitectura con limpieza RAII y manejo de señales POSIX. Si el daemon se detiene o se desinstala el paquete, el hardware se restaura automáticamente a modo fábrica antes de salir, impidiendo botones muertos en el ratón.
-* 🪶 **Consumo Mínimo de Recursos:**
-  El daemon en segundo plano (`mx-daemon`) consume apenas **~2 a 3 MB de memoria RAM** en reposo (a diferencia de clientes basados en Electron que consumen cientos de megabytes).
-* 🎨 **Interfaz Gráfica Moderna (Tauri v2 + Svelte 5):**
-  Blueprint vectorial interactivo fotorrealista del MX Vertical con iluminación reactiva, menú contextual en la bandeja del sistema (System Tray con porcentaje de batería) y layout optimizado con anclaje superior (*Top-Pinning*).
-* 🔒 **Seguridad y Ejecución sin `sudo`:**
-  Reglas `udev` modernas con `TAG+="uaccess"` y comunicación IPC por Unix Domain Socket (`0600`) verificado con `SO_PEERCRED`. Sandboxing estricto de usuario.
+## Funciones
 
----
+- **Desvío completo de botones (*Button Diversion* HID++ 2.0/4.5):** reprograma el botón superior de DPI (`0x00FD`), la rueda central (`0x0052`) y los botones laterales de pulgar Adelante (`0x0056`) y Atrás (`0x0053`) del **Logitech MX Vertical** (por Bluetooth o receptor Unifying/Bolt)
+- **Restauración nativa en caliente (*Función de Fábrica*):** devuelve cualquier botón a su comportamiento original de hardware (`BTN_SIDE`, `BTN_EXTRA`, `BTN_MIDDLE`) sin reiniciar el ratón
+- **Emulación universal por `/dev/uinput`:** funciona de forma transparente en **Wayland** (GNOME, KDE Plasma, Sway, Hyprland) y **X11**, soportando pulsaciones sostenidas (*hold*) y atajos de escritorio (`Super/Meta`, cambio de espacio de trabajo `Ctrl+Alt+→/←`, `Alt+Tab`, `Copiar`, `Pegar`, `Silenciar`, `Play/Pausa`)
+- **Garantía *Zero Dead Buttons* y *Zero Stuck Keys*:** guardianes RAII y scripts de paquete restauran automáticamente el firmware del ratón al detener el servicio o desinstalar la aplicación, evitando que el botón superior quede inerte
+- **Blueprint interactivo de 57°:** ilustración técnica vectorial del MX Vertical con resaltado reactivo por botón, filtros por categoría y modal de telemetría interna en tiempo real
+- **Bandeja del sistema (*System Tray*):** indicador con porcentaje de batería, estado de carga y reinicio rápido del servicio
+- **Seguridad sin `root`:** reglas `udev` con `TAG+="uaccess"` y canal IPC por socket Unix (`0600`) autenticado mediante credenciales del kernel (`SO_PEERCRED`)
+- **Interfaz en español e inglés:** detecta automáticamente el idioma del sistema e incluye selector interactivo `ES | EN` en la barra superior
 
-## 📦 Herramientas Incluidas
+## Herramientas incluidas
 
-La suite empaqueta 5 utilidades complementarias:
+El paquete instala cinco binarios complementarios en `/usr/bin`:
 
-| Binario | Rol / Propósito |
+| Binario | Función |
 |---|---|
-| `mx-daemon` | Servicio en segundo plano para arbitraje HID++, uinput y servidor de socket IPC. |
-| `mx-gui` | Interfaz gráfica de usuario con System Tray y blueprint interactivo del mouse. |
-| `mx-cli` | Herramienta de línea de comandos para control interactivo y consultas de estado. |
-| `mx-diag` | Utilidad de telemetría, inspección de salud, diagnóstico de memoria y convivencia. |
-| `mx-probe` | Sonda de diagnóstico directo para volcado de características e inspección de reportes HID++. |
+| `mx-daemon` | Servicio en segundo plano (`systemd --user`) que gestiona el protocolo HID++, la reconexión automática, `/dev/uinput` y el socket IPC |
+| `mx-gui` | Interfaz gráfica de escritorio en Tauri v2 + Svelte 5 con bandeja del sistema y blueprint interactivo |
+| `mx-cli` | Utilidad de línea de comandos para consultar estado, batería y probar desvíos desde la terminal |
+| `mx-diag` | Herramienta de diagnóstico de permisos `udev`, convivencia de dispositivos y telemetría de salud |
+| `mx-probe` | Sonda de bajo nivel para enumerar registros y características del firmware HID++ 2.0/4.5 |
 
----
+## Requisitos
 
-## 🚀 Instalación
+MX Pilot utiliza el motor web y las bibliotecas gráficas que ya incluye tu distribución de Linux en lugar de empaquetar un navegador Chromium propio. Por eso el instalador pesa apenas 4.15 MB.
 
-### En Debian / Ubuntu / Linux Mint / Pop!_OS (`.deb`)
+| Distribución | Paquetes requeridos | ¿Se instalan solos? |
+|---|---|---|
+| **Debian / Ubuntu / Linux Mint / Pop!_OS** | `libwebkit2gtk-4.1-0`, `libgtk-3-0` (o `libgtk-3-0t64`), `libayatana-appindicator3-1`, `udev`, `systemd`, `procps` | Sí, declarados en el paquete `.deb` e instalados automáticamente con `apt` |
+| **Fedora / RHEL / openSUSE** | `webkit2gtk4.1`, `gtk3`, `libayatana-appindicator-gtk3`, `systemd`, `systemd-udev`, `procps-ng` | Sí, declarados en el paquete `.rpm` e instalados automáticamente con `dnf` |
 
-Descarga el último instalador desde la pestaña [**Releases**](https://github.com/Panxio/mxpilot/releases):
+En Ubuntu 24.04 y posteriores el paquete de GTK se llama `libgtk-3-0t64`; el instalador `.deb` declara compatibilidad dual (`libgtk-3-0t64 | libgtk-3-0`), por lo que funciona directamente tanto en Ubuntu 22.04/Debian 12 como en Ubuntu 24.04+.
+
+## Instalación
+
+### Debian, Ubuntu, Linux Mint y derivados (`.deb`)
+
+Descarga el paquete `.deb` desde la sección de [**Releases**](https://github.com/Panxio/mxpilot/releases). **Usa `apt` y no `dpkg`**, porque `apt` resuelve e instala automáticamente cualquier biblioteca compartida que falte:
 
 ```bash
-# Instalar paquete deb
 sudo apt install ./mx-options_0.1.0-1_amd64.deb
 ```
 
-El instalador:
-1. Registra las reglas `udev` en `/usr/lib/udev/rules.d/70-mx-options.rules` y las recarga en caliente.
-2. Registra el servicio de usuario en `/usr/lib/systemd/user/mx-options.service`.
-3. Añade el lanzador al menú de aplicaciones (`/usr/share/applications/mx-options.desktop`) con tema de iconos Hicolor.
+### Fedora, RHEL y openSUSE (`.rpm`)
 
-Para iniciar la interfaz gráfica, búscala como **MX Options** en el menú de aplicaciones de tu escritorio o ejecuta:
+Descarga el paquete `.rpm` desde [**Releases**](https://github.com/Panxio/mxpilot/releases) e instálalo con `dnf`:
 
 ```bash
+sudo dnf install ./mx-options-0.1.0-1.x86_64.rpm
+```
+
+### Primer inicio
+
+Tras instalar el paquete, activa el servicio de usuario para tu sesión y abre la interfaz gráfica desde el menú de aplicaciones (**MX Options**) o la terminal:
+
+```bash
+systemctl --user enable --now mx-options.service
 mx-gui
 ```
 
----
+### Compilar desde el código
 
-## ⚙️ Compilación desde el Código Fuente
+Requiere Rust (`1.80+`), Node.js (`20+`) y las cabeceras de desarrollo de Tauri v2 y `libudev`/`libevdev`.
 
-### Requisitos previos (Debian/Ubuntu):
+En Debian/Ubuntu:
+
 ```bash
 sudo apt update
-sudo apt install -y build-essential libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libudev-dev libevdev-dev dpkg-dev
+sudo apt install -y build-essential libwebkit2gtk-4.1-dev libappindicator3-dev \
+  librsvg2-dev libudev-dev libevdev-dev dpkg-dev rpm cpio
 ```
 
-### Compilar y probar localmente:
+En Fedora:
+
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/Panxio/mxpilot.git
-cd mxpilot
-
-# 2. Compilar frontend Svelte
-npm --prefix crates/mx-gui/ui install
-npm --prefix crates/mx-gui/ui run build
-
-# 3. Compilar workspace en modo release
-cargo build --release --workspace
-
-# 4. Ejecutar tests unitarios
-cargo test --workspace
+sudo dnf install -y gcc gcc-c++ make webkit2gtk4.1-devel gtk3-devel \
+  libayatana-appindicator-gtk3-devel librsvg2-devel systemd-devel libevdev-devel rpm-build
 ```
 
----
+Compilar, verificar tests y generar los instaladores `.deb` y `.rpm`:
 
-## 📄 Licencia
+```bash
+npm --prefix crates/mx-gui/ui ci
+npm --prefix crates/mx-gui/ui test
+cargo test --workspace
 
-Este proyecto está distribuido bajo la licencia **GNU General Public License v2.0 (GPL-2.0)**. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+# Generar paquetes de distribución en target/
+./scripts/package-deb.sh
+./scripts/package-rpm.sh
+```
 
-*Aviso: Este proyecto es un desarrollo independiente de código abierto y no está afiliado, respaldado ni respaldado oficialmente por Logitech.*
+## Licencia
+
+Este proyecto está publicado bajo la licencia **GNU General Public License v2.0 (GPL-2.0)**. Consulta el archivo [`LICENSE`](LICENSE) para más información.
+
+*Aviso: MX Pilot es un proyecto independiente de código abierto y no está afiliado ni respaldado por Logitech.*

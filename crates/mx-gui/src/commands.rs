@@ -94,6 +94,12 @@ pub async fn get_gui_memory() -> Result<u64, String> {
         .map_err(|e| format!("Error en worker de memoria: {}", e))?
 }
 
+#[tauri::command]
+pub async fn set_locale(locale: String, app: tauri::AppHandle) -> Result<(), String> {
+    crate::tray::set_tray_locale(&app, &locale);
+    Ok(())
+}
+
 /// Lee el VmRSS en KB desde /proc/self/status.
 fn read_own_rss_kb() -> Result<u64, String> {
     let content = std::fs::read_to_string("/proc/self/status")

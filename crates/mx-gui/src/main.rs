@@ -30,6 +30,7 @@ fn main() {
             commands::set_action,
             commands::start_daemon_service,
             commands::get_gui_memory,
+            commands::set_locale,
         ])
         .setup(move |app| {
             // Intentar inicializar system tray de forma fallible

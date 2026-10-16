@@ -44,3 +44,14 @@ export async function startDaemonService() {
 export async function getGuiMemory() {
   return await invoke('get_gui_memory');
 }
+
+/**
+ * Sincroniza el idioma activo con el System Tray de Rust.
+ * @param {'es' | 'en'} locale
+ */
+export async function setGuiLocale(locale) {
+  try {
+    await invoke('set_locale', { locale });
+  } catch (_) {}
+}
+

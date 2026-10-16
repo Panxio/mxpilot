@@ -1,100 +1,101 @@
 <script>
-  import { selectedCid, statusData, isPendingAction, errorMessage, BUTTON_DEFINITIONS, uiState } from './stores.js';
+  import { selectedCid, statusData, isPendingAction, errorMessage, uiState } from './stores.js';
+  import { t, localizedButtons } from './i18n.js';
   import { setAction, getStatus } from './api.js';
   import { isActionEqual, getActionForCid } from './actions.js';
 
-  const CATEGORIES = [
-    { id: 'all', label: 'Todas' },
-    { id: 'nav', label: 'Navegación' },
-    { id: 'prod', label: 'Productividad' },
-    { id: 'hw', label: 'Hardware' },
+  $: CATEGORIES = [
+    { id: 'all', label: $t('cat_all') },
+    { id: 'nav', label: $t('cat_nav') },
+    { id: 'prod', label: $t('cat_prod') },
+    { id: 'hw', label: $t('cat_hw') },
   ];
 
-  const PRESET_ACTIONS = [
+  $: PRESET_ACTIONS = [
     {
       id: 'super',
       category: 'nav',
-      label: 'Super / Meta (Actividades)',
-      desc: 'Abre la vista general del escritorio en GNOME / KDE.',
+      label: $t('act_super_label'),
+      desc: $t('act_super_desc'),
       payload: { type: 'SingleKey', key: 'KEY_LEFTMETA' },
       icon: '❖',
     },
     {
       id: 'workspace_right',
       category: 'nav',
-      label: 'Espacio de Trabajo: Derecha (Ctrl + Alt + →)',
-      desc: 'Cambia al espacio de trabajo virtual a la derecha.',
+      label: $t('act_ws_right_label'),
+      desc: $t('act_ws_right_desc'),
       payload: { type: 'KeyCombo', modifiers: ['KEY_LEFTCTRL', 'KEY_LEFTALT'], key: 'KEY_RIGHT' },
       icon: '→',
     },
     {
       id: 'workspace_left',
       category: 'nav',
-      label: 'Espacio de Trabajo: Izquierda (Ctrl + Alt + ←)',
-      desc: 'Cambia al espacio de trabajo virtual a la izquierda.',
+      label: $t('act_ws_left_label'),
+      desc: $t('act_ws_left_desc'),
       payload: { type: 'KeyCombo', modifiers: ['KEY_LEFTCTRL', 'KEY_LEFTALT'], key: 'KEY_LEFT' },
       icon: '←',
     },
     {
       id: 'alttab',
       category: 'nav',
-      label: 'Cambio de Ventana (Alt + Tab)',
-      desc: 'Conmuta entre las aplicaciones activas.',
+      label: $t('act_alttab_label'),
+      desc: $t('act_alttab_desc'),
       payload: { type: 'KeyCombo', modifiers: ['KEY_LEFTALT'], key: 'KEY_TAB' },
       icon: '⇥',
     },
     {
       id: 'copy',
       category: 'prod',
-      label: 'Copiar (Ctrl + C)',
-      desc: 'Copia el texto o archivo seleccionado al portapapeles.',
+      label: $t('act_copy_label'),
+      desc: $t('act_copy_desc'),
       payload: { type: 'KeyCombo', modifiers: ['KEY_LEFTCTRL'], key: 'KEY_C' },
       icon: '📋',
     },
     {
       id: 'paste',
       category: 'prod',
-      label: 'Pegar (Ctrl + V)',
-      desc: 'Pega el contenido del portapapeles.',
+      label: $t('act_paste_label'),
+      desc: $t('act_paste_desc'),
       payload: { type: 'KeyCombo', modifiers: ['KEY_LEFTCTRL'], key: 'KEY_V' },
       icon: '📄',
     },
     {
       id: 'mute',
       category: 'prod',
-      label: 'Silenciar / Desmutear Audio',
-      desc: 'Alterna el estado de silencio del sistema.',
+      label: $t('act_mute_label'),
+      desc: $t('act_mute_desc'),
       payload: { type: 'SingleKey', key: 'KEY_MUTE' },
       icon: '🔇',
     },
     {
       id: 'playpause',
       category: 'prod',
-      label: 'Reproducir / Pausar Multimedia',
-      desc: 'Control de reproducción global (Spotify, navegadores).',
+      label: $t('act_playpause_label'),
+      desc: $t('act_playpause_desc'),
       payload: { type: 'SingleKey', key: 'KEY_PLAYPAUSE' },
       icon: '⏯',
     },
     {
       id: 'none',
       category: 'hw',
-      label: 'Deshabilitar Botón',
-      desc: 'No emite ninguna acción uinput ante clics.',
+      label: $t('act_none_label'),
+      desc: $t('act_none_desc'),
       payload: { type: 'None' },
       icon: '⊘',
     },
     {
       id: 'default',
       category: 'hw',
-      label: 'Función de Fábrica (Navegación / Clic Nativo)',
-      desc: 'Restaura el control del hardware nativo (ej. Atrás/Adelante en Chrome/Firefox, clic central).',
+      label: $t('act_default_label'),
+      desc: $t('act_default_desc'),
       payload: { type: 'SystemDefault' },
       icon: '↺',
     },
   ];
 
   let selectedButtonDef;
-  $: selectedButtonDef = BUTTON_DEFINITIONS.find((b) => b.cid === $selectedCid) || BUTTON_DEFINITIONS[0];
+  $: selectedButtonDef = $localizedButtons.find((b) => b.cid === $selectedCid) || $localizedButtons[0];
 
   // Acción reactiva actualmente configurada para el botón seleccionado
   let currentAction = null;
@@ -138,7 +139,7 @@
       statusData.set(freshStatus);
     } catch (err) {
       console.error('Error aplicando acción:', err);
-      errorMessage.set(typeof err === 'string' ? err : 'Error al comunicar con mx-daemon');
+      errorMessage.set(typeof err === 'string' ? err : $t('err_apply_action_failed'));
       // Reconciliación para asegurar integridad
       try {
         const freshStatus = await getStatus();
@@ -166,12 +167,12 @@
     <div class="flex-shrink-0">
       {#if isDefaultSystem}
         <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800/90 border border-slate-700/80 text-slate-300">
-          Función de Fábrica
+          {$t('picker_factory_badge')}
         </span>
       {:else}
         <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 space-x-1.5 shadow-sm shadow-emerald-500/10">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Personalizado</span>
+          <span>{$t('picker_custom_badge')}</span>
         </span>
       {/if}
     </div>
@@ -224,11 +225,11 @@
         <div class="ml-2 flex-shrink-0">
           {#if isActive}
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/20">
-              ✓ Activo
+              {$t('picker_active_badge')}
             </span>
           {:else}
             <span class="text-xs text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-              Asignar
+              {$t('picker_assign_hint')}
             </span>
           {/if}
         </div>
@@ -239,7 +240,7 @@
   {#if $isPendingAction}
     <div class="mt-2 text-center text-xs text-indigo-400 animate-pulse flex items-center justify-center space-x-2">
       <span class="inline-block w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
-      <span>Aplicando configuración en mx-daemon...</span>
+      <span>{$t('picker_applying')}</span>
     </div>
   {/if}
 </div>

@@ -2,11 +2,19 @@
 node_modules/
 target/
 dist/
-# graphify (memoria de grafo: cost es local)
-graphify-out/cost.json
-# logs de sub-agentes y permisos locales (regenerables / personales)
+
+# generados por Tauri en cada build (no se versionan)
+crates/mx-gui/gen/schemas/
+
+# andamiaje interno de agentes y bitácoras locales (no se publican en el repo de producto)
+.internal/
 .superpowers/
-.claude/settings.local.json
+.claude/
+AGENTS.md
+CLAUDE.md
+STATUS.md
+graphify-out/
+
 # os
 .DS_Store
 

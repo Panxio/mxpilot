@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  build-deb:
-    name: Build Debian Package (.deb)
+  build-packages:
+    name: Build Linux Packages (.deb & .rpm)
     runs-on: ubuntu-24.04
 
     steps:
@@ -28,7 +28,9 @@ jobs:
             build-essential \
             libudev-dev \
             libevdev-dev \
-            dpkg-dev
+            dpkg-dev \
+            rpm \
+            cpio
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -40,6 +42,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix crates/mx-gui/ui
 
+      - name: Run frontend unit and i18n tests
+        run: npm --prefix crates/mx-gui/ui test
+
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -48,33 +53,38 @@ jobs:
       - name: Cache Rust dependencies
         uses: swatinem/rust-cache@v2
 
-      - name: Run unit and integration tests
+      - name: Run Rust unit and integration tests
         run: cargo test --workspace
 
       - name: Run clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Build Debian Package
+      - name: Build Debian (.deb) and RPM (.rpm) Packages
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            ./scripts/package-deb.sh "${GITHUB_REF_NAME#v}"
+            VER="${GITHUB_REF_NAME#v}"
+            ./scripts/package-deb.sh "${VER}"
+            ./scripts/package-rpm.sh "${VER}"
           else
             ./scripts/package-deb.sh
+            ./scripts/package-rpm.sh
           fi
 
-      - name: Audit Debian Package
-        run: ./scripts/audit-packages.sh target/mx-options_*_amd64.deb
+      - name: Audit Debian and RPM Packages
+        run: ./scripts/audit-packages.sh target/mx-options_*_amd64.deb target/mx-options-*.x86_64.rpm
 
-      - name: Upload Debian Artifact
+      - name: Upload Release Packages (.deb & .rpm)
         uses: actions/upload-artifact@v4
         with:
-          name: mx-options-deb
-          path: target/mx-options_*_amd64.deb
+          name: mx-options-packages
+          path: |
+            target/mx-options_*_amd64.deb
+            target/mx-options-*.x86_64.rpm
           retention-days: 14
 
   publish-release:
     name: Publish GitHub Release
-    needs: build-deb
+    needs: build-packages
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
@@ -84,16 +94,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Debian Artifact
+      - name: Download Release Packages
         uses: actions/download-artifact@v4
         with:
-          name: mx-options-deb
+          name: mx-options-packages
           path: release-artifacts/
 
       - name: Generate SHA256 Checksums
         working-directory: release-artifacts
         run: |
-          sha256sum * > SHA256SUMS.txt
+          sha256sum *.deb *.rpm > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Create GitHub Release

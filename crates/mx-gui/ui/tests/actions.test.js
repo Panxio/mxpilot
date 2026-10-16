@@ -127,4 +127,51 @@ assert.strictEqual(isActionEqual(wsRightA, wsRightB), true, 'Test 13a falló');
 assert.strictEqual(isActionEqual(wsRightA, wsLeft), false, 'Test 13b falló');
 console.log('✓ Test 13: Acciones de Espacio de Trabajo (Derecha / Izquierda) comparadas e igualadas canónicamente');
 
-console.log('--- TODOS LOS 13 TESTS DE ACTIONS.JS PASARON EN VERDE ---');
+// --- Suite de Verificación Bilingüe (i18n ES / EN — Fase 6) ---
+import {
+  DICTIONARY,
+  STORAGE_KEY,
+  detectInitialLocale,
+  translate,
+  getLocalizedButtons,
+  getLocalizedActionSummary,
+} from '../src/lib/i18n.js';
+
+// Test 14: Paridad estricta de claves entre español e inglés
+const esKeys = Object.keys(DICTIONARY.es).sort();
+const enKeys = Object.keys(DICTIONARY.en).sort();
+assert.deepStrictEqual(esKeys, enKeys, 'Test 14 falló: Desfase de claves entre DICTIONARY.es y DICTIONARY.en');
+for (const k of esKeys) {
+  assert.ok(typeof DICTIONARY.es[k] === 'string' && DICTIONARY.es[k].trim().length > 0, `Clave ES vacía: ${k}`);
+  assert.ok(typeof DICTIONARY.en[k] === 'string' && DICTIONARY.en[k].trim().length > 0, `Clave EN vacía: ${k}`);
+}
+console.log(`✓ Test 14: Paridad 100% entre DICTIONARY.es y DICTIONARY.en (${esKeys.length} claves verificadas)`);
+
+// Test 15: Detección automática de idioma (localStorage y navigator.language)
+const mockStorageEn = { getItem: (k) => (k === STORAGE_KEY ? 'en' : null) };
+const mockStorageEmpty = { getItem: () => null };
+assert.strictEqual(detectInitialLocale({ storage: mockStorageEn, navigatorLanguage: 'es-CL' }), 'en', 'Test 15a falló');
+assert.strictEqual(detectInitialLocale({ storage: mockStorageEmpty, navigatorLanguage: 'es-ES' }), 'es', 'Test 15b falló');
+assert.strictEqual(detectInitialLocale({ storage: mockStorageEmpty, navigatorLanguage: 'en-US' }), 'en', 'Test 15c falló');
+assert.strictEqual(detectInitialLocale({ storage: mockStorageEmpty, navigatorLanguage: 'fr-FR' }), 'en', 'Test 15d falló');
+console.log('✓ Test 15: Detección de idioma (localStorage > navigator.language > fallback en) verificada');
+
+// Test 16: Botones y resúmenes localizados
+const btnsEs = getLocalizedButtons('es');
+const btnsEn = getLocalizedButtons('en');
+assert.strictEqual(btnsEs.length, 4);
+assert.strictEqual(btnsEn.length, 4);
+assert.strictEqual(btnsEs[0].name, 'Botón Superior (DPI)');
+assert.strictEqual(btnsEn[0].name, 'Top Button (DPI)');
+assert.strictEqual(
+  getLocalizedActionSummary(0x00FD, { 253: { type: 'SingleKey', key: 'KEY_LEFTMETA' } }, 'en'),
+  'Super (Activities)'
+);
+assert.strictEqual(
+  getLocalizedActionSummary(0x00FD, {}, 'en'),
+  'System Default'
+);
+console.log('✓ Test 16: Traducción reactiva de los 4 CIDs y resúmenes de acción verificada');
+
+console.log('--- TODOS LOS 16 TESTS DE FRONTEND (ACTIONS + I18N) PASARON EN VERDE ---');
+

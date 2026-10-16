@@ -1,9 +1,13 @@
+%global debug_package %{nil}
+%define _build_id_links none
+
 Name:           mx-options
-Version:        0.1.0
-Release:        1%{?dist}
+Version:        %{?!pkg_version:0.1.0}
+Release:        %{?!pkg_release:1}%{?dist}
 Summary:        Control y configuracion nativa para ratones Logitech MX en Linux
 License:        GPL-2.0-only
-URL:            https://github.com/panxio/mx-options-linux
+URL:            https://github.com/Panxio/mxpilot
+AutoReqProv:    no
 
 Requires:       webkit2gtk4.1
 Requires:       gtk3
@@ -13,10 +17,18 @@ Requires:       systemd-udev
 Requires:       procps-ng
 
 %description
-mx-options es una suite ligera y nativa para configurar ratones Logitech MX
-(especialmente MX Vertical) bajo Linux, sin permisos de root en tiempo de ejecucion.
-Incluye el servicio de sesion (mx-daemon), la interfaz grafica (mx-gui),
-la CLI (mx-cli), la sonda de protocolo (mx-probe) y telemetria (mx-diag).
+mx-options (MX Pilot) es una suite ligera y nativa para configurar ratones
+Logitech MX (especialmente MX Vertical) bajo Linux, sin permisos de root en
+tiempo de ejecucion. Incluye el servicio de sesion (mx-daemon), la interfaz
+grafica (mx-gui), la CLI (mx-cli), la sonda de protocolo (mx-probe) y
+telemetria (mx-diag).
+
+%install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}
+if [ -n "%{?staging_dir}" ] && [ -d "%{?staging_dir}" ]; then
+    cp -a %{staging_dir}/* %{buildroot}/
+fi
 
 %post
 if [ -f /etc/udev/rules.d/99-mx-options.rules ]; then
@@ -39,6 +51,7 @@ fi
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database -q /usr/share/applications 2>/dev/null || true
 fi
+exit 0
 
 %preun
 if [ "$1" = "0" ]; then
@@ -55,6 +68,7 @@ if [ "$1" = "0" ]; then
         fi
     fi
 fi
+exit 0
 
 %postun
 if [ "$1" = "0" ]; then
@@ -69,16 +83,19 @@ if [ "$1" = "0" ]; then
         update-desktop-database -q /usr/share/applications 2>/dev/null || true
     fi
 fi
+exit 0
 
 %files
-%license LICENSE
-/usr/bin/mx-daemon
-/usr/bin/mx-gui
-/usr/bin/mx-diag
-/usr/bin/mx-cli
-/usr/bin/mx-probe
+%defattr(0644,root,root,0755)
+%attr(0755,root,root) /usr/bin/mx-daemon
+%attr(0755,root,root) /usr/bin/mx-gui
+%attr(0755,root,root) /usr/bin/mx-diag
+%attr(0755,root,root) /usr/bin/mx-cli
+%attr(0755,root,root) /usr/bin/mx-probe
 /usr/lib/udev/rules.d/70-mx-options.rules
 /usr/lib/systemd/user/mx-options.service
 /usr/share/applications/mx-options.desktop
+/usr/share/doc/mx-options/LICENSE
+/usr/share/doc/mx-options/copyright
 /usr/share/icons/hicolor/*/apps/mx-options.png
 /usr/share/icons/hicolor/scalable/apps/mx-options.svg

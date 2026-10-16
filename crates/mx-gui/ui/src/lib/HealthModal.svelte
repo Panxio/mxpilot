@@ -1,5 +1,6 @@
 <script>
   import { showHealthModal, healthData, guiMemoryKb } from './stores.js';
+  import { t } from './i18n.js';
   import { getHealth, getGuiMemory } from './api.js';
 
   let isLoading = false;
@@ -45,7 +46,7 @@
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div class="flex items-center space-x-2">
           <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
-          <h3 class="text-sm font-semibold text-white tracking-wide">Telemetría y Diagnóstico Interno</h3>
+          <h3 class="text-sm font-semibold text-white tracking-wide">{$t('modal_title')}</h3>
         </div>
         <button
           type="button"
@@ -61,35 +62,35 @@
         {#if $healthData}
           <div class="grid grid-cols-2 gap-2">
             <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">Estado Daemon</span>
+              <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_daemon_state')}</span>
               <div class="font-medium text-slate-200 mt-0.5">{$healthData.state}</div>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">Tiempo Activo (Uptime)</span>
+              <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_uptime')}</span>
               <div class="font-medium text-slate-200 mt-0.5">{$healthData.uptime_seconds}s</div>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">Dispositivo HID++</span>
-              <div class="font-medium text-slate-200 mt-0.5 truncate">{$healthData.device_name || 'Ninguno'}</div>
+              <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_hidpp_device')}</span>
+              <div class="font-medium text-slate-200 mt-0.5 truncate">{$healthData.device_name || $t('modal_device_none')}</div>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">Nodo hidraw</span>
+              <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_hidraw_node')}</span>
               <div class="font-medium text-slate-200 mt-0.5 truncate font-mono">{$healthData.device_path || 'N/A'}</div>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">Divert Epoch</span>
+              <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_divert_epoch')}</span>
               <div class="font-medium text-slate-200 mt-0.5 font-mono">#{$healthData.divert_epoch}</div>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">Reconexiones</span>
+              <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_reconnections')}</span>
               <div class="font-medium text-slate-200 mt-0.5">{$healthData.reconnect_count}</div>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">Cola Eventos / Perdidos</span>
+              <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_queue_dropped')}</span>
               <div class="font-medium text-slate-200 mt-0.5 font-mono">{$healthData.queue_depth} / {$healthData.dropped_events}</div>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">Fallos Consecutivos</span>
+              <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_consecutive_failures')}</span>
               <div class="font-medium text-slate-200 mt-0.5">{$healthData.consecutive_failures}</div>
             </div>
           </div>
@@ -98,16 +99,16 @@
           <div class="p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/30">
             <div class="flex items-center space-x-2 text-indigo-300 font-semibold mb-2">
               <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-              <span>Consumo de Memoria RAM</span>
-              <span class="text-[10px] font-mono text-slate-400 uppercase font-normal">(Residente / RSS)</span>
+              <span>{$t('modal_ram_title')}</span>
+              <span class="text-[10px] font-mono text-slate-400 uppercase font-normal">{$t('modal_ram_rss_tag')}</span>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
-                <span class="text-[10px] text-slate-400 uppercase font-mono">Daemon (Servicio)</span>
+                <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_ram_daemon')}</span>
                 <div class="font-medium text-slate-200 mt-0.5 font-mono">{($healthData.rss_kb / 1024).toFixed(2)} MB</div>
               </div>
               <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
-                <span class="text-[10px] text-slate-400 uppercase font-mono">Interfaz (GUI)</span>
+                <span class="text-[10px] text-slate-400 uppercase font-mono">{$t('modal_ram_gui')}</span>
                 <div class="font-medium text-slate-200 mt-0.5 font-mono">{($guiMemoryKb / 1024).toFixed(2)} MB</div>
               </div>
             </div>
@@ -115,13 +116,13 @@
 
           {#if $healthData.last_error}
             <div class="p-2.5 rounded-xl bg-rose-950/30 border border-rose-500/30 text-rose-300">
-              <span class="text-[10px] font-mono uppercase block text-rose-400 font-semibold">Último Error Registrado:</span>
+              <span class="text-[10px] font-mono uppercase block text-rose-400 font-semibold">{$t('modal_last_error')}</span>
               <span class="font-mono text-[11px] break-all">{$healthData.last_error}</span>
             </div>
           {/if}
         {:else}
           <div class="text-center py-6 text-slate-400">
-            No se han obtenido datos de telemetría todavía.
+            {$t('modal_empty')}
           </div>
         {/if}
       </div>
@@ -135,7 +136,7 @@
             on:click={refreshHealth}
             class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors flex items-center space-x-1.5"
           >
-            <span>{isLoading ? 'Consultando...' : 'Actualizar'}</span>
+            <span>{isLoading ? $t('modal_querying') : $t('modal_refresh')}</span>
           </button>
           
           <button
@@ -144,7 +145,7 @@
             on:click={copyDiagnostics}
             class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors flex items-center space-x-1.5 disabled:opacity-50"
           >
-            <span>{copyFeedback ? '✓ Copiado' : '📋 Copiar Diagnóstico'}</span>
+            <span>{copyFeedback ? $t('modal_copied') : $t('modal_copy_btn')}</span>
           </button>
         </div>
 
@@ -153,7 +154,7 @@
           on:click={closeModal}
           class="px-4 py-1.5 rounded-xl text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
         >
-          Cerrar
+          {$t('modal_close')}
         </button>
       </div>
     </div>

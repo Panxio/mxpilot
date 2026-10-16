@@ -10,7 +10,8 @@
     guiMemoryKb,
     lastUpdated
   } from './lib/stores.js';
-  import { getStatus, getHealth, getGuiMemory, startDaemonService } from './lib/api.js';
+  import { getStatus, getHealth, getGuiMemory, startDaemonService, setGuiLocale } from './lib/api.js';
+  import { locale, setLocale, t } from './lib/i18n.js';
   import MouseViewer from './lib/MouseViewer.svelte';
   import ActionPicker from './lib/ActionPicker.svelte';
   import BatteryBadge from './lib/BatteryBadge.svelte';
@@ -19,6 +20,11 @@
   let isStartingService = false;
   let unlistenStatusChanged = null;
   let unlistenStatusError = null;
+
+  function switchLanguage(lang) {
+    setLocale(lang);
+    setGuiLocale(lang);
+  }
 
   async function syncStatus() {
     try {
@@ -34,7 +40,7 @@
     } catch (err) {
       console.warn('Fallo al obtener estado inicial:', err);
       uiState.set('DaemonDown');
-      errorMessage.set(typeof err === 'string' ? err : 'mx-daemon no responde en el socket IPC');
+      errorMessage.set(typeof err === 'string' ? err : $t('err_daemon_unreachable'));
     }
   }
 
@@ -46,7 +52,7 @@
       await syncStatus();
     } catch (err) {
       console.error('Error al iniciar servicio:', err);
-      errorMessage.set(typeof err === 'string' ? err : 'No se pudo iniciar el servicio mx-options');
+      errorMessage.set(typeof err === 'string' ? err : $t('err_start_service_failed'));
     } finally {
       isStartingService = false;
     }
@@ -64,6 +70,7 @@
   }
 
   onMount(async () => {
+    setGuiLocale($locale);
     await syncStatus();
 
     // Escuchar eventos en tiempo real emitidos por el poller de Rust
@@ -115,7 +122,7 @@
             {/if}
           </h1>
           <p class="text-[10px] text-slate-400 font-mono tracking-wide">
-            {$statusData.device_path || 'Linux Native Driver'}
+            {$statusData.device_path || $t('header_driver_fallback')}
           </p>
         </div>
       </div>
@@ -124,14 +131,39 @@
       <div class="flex items-center space-x-2.5">
         <BatteryBadge />
 
+        <!-- Selector de Idioma Bilingüe (ES | EN) -->
+        <div
+          class="inline-flex items-center rounded-full bg-slate-900/90 border border-slate-700/80 p-0.5 text-[11px] font-semibold"
+          role="group"
+          aria-label={$t('header_lang_title')}
+          title={$t('header_lang_title')}
+        >
+          <button
+            type="button"
+            on:click={() => switchLanguage('es')}
+            class="px-2 py-0.5 rounded-full transition-colors duration-150 {$locale === 'es' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}"
+            aria-pressed={$locale === 'es'}
+          >
+            ES
+          </button>
+          <button
+            type="button"
+            on:click={() => switchLanguage('en')}
+            class="px-2 py-0.5 rounded-full transition-colors duration-150 {$locale === 'en' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}"
+            aria-pressed={$locale === 'en'}
+          >
+            EN
+          </button>
+        </div>
+
         <button
           type="button"
           on:click={openTelemetry}
-          title="Ver diagnóstico y telemetría"
+          title={$t('header_diagnostics_title')}
           class="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-800 hover:bg-slate-700/80 text-slate-300 border border-slate-700 transition-colors"
         >
           <span class="text-[12px]">🛠</span>
-          <span>Diagnóstico</span>
+          <span>{$t('header_diagnostics')}</span>
         </button>
       </div>
     </div>
@@ -143,7 +175,7 @@
       <div class="max-w-[1100px] mx-auto w-full flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <span class="text-rose-400 font-bold">⚠</span>
-          <span>mx-daemon no está en ejecución. Los atajos personalizados están inactivos.</span>
+          <span>{$t('banner_daemon_down')}</span>
         </div>
         <button
           type="button"
@@ -151,7 +183,7 @@
           on:click={handleStartService}
           class="px-3 py-1 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition-colors disabled:opacity-50"
         >
-          {isStartingService ? 'Iniciando...' : 'Iniciar Servicio'}
+          {isStartingService ? $t('banner_starting_service') : $t('banner_start_service')}
         </button>
       </div>
     </div>
@@ -160,9 +192,9 @@
       <div class="max-w-[1100px] mx-auto w-full flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <span class="text-amber-400">ℹ</span>
-          <span>Ratón desconectado o en reposo Bluetooth. Configuración guardada en perfil.</span>
+          <span>{$t('banner_disconnected')}</span>
         </div>
-        <span class="text-[10px] font-mono text-amber-400/80">Reconexión automática activa</span>
+        <span class="text-[10px] font-mono text-amber-400/80">{$t('banner_autoreconnect')}</span>
       </div>
     </div>
   {/if}

@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: mx-options
-Upstream-Contact: MX Options Linux Contributors <https://github.com/panxio/mx-options-linux>
-Source: https://github.com/panxio/mx-options-linux
+Upstream-Contact: MX Pilot Contributors <https://github.com/Panxio/mxpilot>
+Source: https://github.com/Panxio/mxpilot
 
 Files: *
 Copyright: 2026 MX Options Linux Contributors
