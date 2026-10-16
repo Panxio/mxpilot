@@ -16,7 +16,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO"
 
-DEV_PATH="/home/panxio"
+DEV_PATHS=("/home/panxio" "/home/runner")
 MAX_BYTES=15728640  # 15 MiB
 
 fail() {
@@ -29,7 +29,8 @@ pass() {
 }
 
 audit_deb() {
-    local DEB="$1"
+    local DEB
+    DEB="$(realpath "$1")"
     echo "=============================================================================="
     echo " INICIANDO AUDITORÍA OBJETIVA DEL PAQUETE DEB: $(basename "$DEB")"
     echo "=============================================================================="
@@ -91,17 +92,21 @@ audit_deb() {
     dpkg-deb -x "$DEB" "$TMP_DIR/root"
     dpkg-deb -e "$DEB" "$TMP_DIR/control"
 
-    if grep -R -a -F -l -- "$DEV_PATH" "$TMP_DIR/root" "$TMP_DIR/control" 2>/dev/null; then
-        fail "Ruta de desarrollo '$DEV_PATH' encontrada en archivos del paquete DEB"
-    fi
+    [[ -f "$TMP_DIR/root/usr/bin/mx-daemon" ]] || fail "Extracción DEB falló o no produjo el payload esperado"
 
-    while IFS= read -r -d '' bin_file; do
-        if strings -a "$bin_file" | grep -F -q -- "$DEV_PATH"; then
-            fail "Ruta de desarrollo '$DEV_PATH' encontrada en binario compilado: $(basename "$bin_file")"
+    for dev_p in "${DEV_PATHS[@]}"; do
+        if grep -R -a -F -l -- "$dev_p" "$TMP_DIR/root" "$TMP_DIR/control" 2>/dev/null; then
+            fail "Ruta de desarrollo '$dev_p' encontrada en archivos del paquete DEB"
         fi
-    done < <(find "$TMP_DIR/root/usr/bin" -type f -perm /111 -print0)
 
-    pass "Cero rutas residuales de desarrollo ($DEV_PATH) en archivos ni en binarios DEB"
+        while IFS= read -r -d '' bin_file; do
+            if grep -a -F -q -- "$dev_p" "$bin_file"; then
+                fail "Ruta de desarrollo '$dev_p' encontrada en binario compilado: $(basename "$bin_file")"
+            fi
+        done < <(find "$TMP_DIR/root/usr/bin" -type f -perm /111 -print0)
+    done
+
+    pass "Cero rutas residuales de desarrollo en archivos ni en binarios DEB"
 
     # 4. Verificación de Integridad del Payload
     echo "--> Verificando presencia de componentes clave en el payload DEB..."
@@ -187,7 +192,8 @@ audit_deb() {
 }
 
 audit_rpm() {
-    local RPM="$1"
+    local RPM
+    RPM="$(realpath "$1")"
     echo "=============================================================================="
     echo " INICIANDO AUDITORÍA OBJETIVA DEL PAQUETE RPM: $(basename "$RPM")"
     echo "=============================================================================="
@@ -254,17 +260,21 @@ audit_rpm() {
     mkdir -p "$TMP_DIR/root"
     (cd "$TMP_DIR/root" && rpm2cpio "$RPM" | cpio -idm 2>/dev/null)
 
-    if grep -R -a -F -l -- "$DEV_PATH" "$TMP_DIR/root" 2>/dev/null; then
-        fail "Ruta de desarrollo '$DEV_PATH' encontrada en archivos del paquete RPM"
-    fi
+    [[ -f "$TMP_DIR/root/usr/bin/mx-daemon" ]] || fail "Extracción RPM falló o no produjo el payload esperado"
 
-    while IFS= read -r -d '' bin_file; do
-        if strings -a "$bin_file" | grep -F -q -- "$DEV_PATH"; then
-            fail "Ruta de desarrollo '$DEV_PATH' encontrada en binario compilado RPM: $(basename "$bin_file")"
+    for dev_p in "${DEV_PATHS[@]}"; do
+        if grep -R -a -F -l -- "$dev_p" "$TMP_DIR/root" 2>/dev/null; then
+            fail "Ruta de desarrollo '$dev_p' encontrada en archivos del paquete RPM"
         fi
-    done < <(find "$TMP_DIR/root/usr/bin" -type f -perm /111 -print0)
 
-    pass "Cero rutas residuales de desarrollo ($DEV_PATH) en archivos ni en binarios RPM"
+        while IFS= read -r -d '' bin_file; do
+            if grep -a -F -q -- "$dev_p" "$bin_file"; then
+                fail "Ruta de desarrollo '$dev_p' encontrada en binario compilado RPM: $(basename "$bin_file")"
+            fi
+        done < <(find "$TMP_DIR/root/usr/bin" -type f -perm /111 -print0)
+    done
+
+    pass "Cero rutas residuales de desarrollo en archivos ni en binarios RPM"
 
     # 4. Verificación de Integridad del Payload RPM
     echo "--> Verificando presencia de componentes clave en el payload RPM..."
