@@ -117,8 +117,9 @@ impl DivertedButtonsEvent {
     /// Params contiene hasta 4 CIDs activos de 2 bytes cada uno
     pub fn parse(params: &[u8]) -> Self {
         let mut pressed_cids = Vec::new();
-        for chunk in params.chunks_exact(2) {
-            let cid = u16::from_be_bytes([chunk[0], chunk[1]]);
+        let (chunks, _) = params.as_chunks::<2>();
+        for chunk in chunks {
+            let cid = u16::from_be_bytes(*chunk);
             if cid != 0 {
                 pressed_cids.push(cid);
             }
