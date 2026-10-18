@@ -335,8 +335,15 @@ audit_rpm() {
 # Procesamiento de argumentos (admite múltiples paquetes .deb y/o .rpm)
 TARGETS=("$@")
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-    TARGETS=("$REPO/target/mx-options_0.1.0-1_amd64.deb")
-    if [[ -f "$REPO/target/mx-options-0.1.0-1.x86_64.rpm" ]]; then
+    PKG_VER="$(grep '^version' "$REPO/Cargo.toml" | head -n1 | cut -d'"' -f2)"
+    if [[ -f "$REPO/target/mx-options_${PKG_VER}-1_amd64.deb" ]]; then
+        TARGETS+=("$REPO/target/mx-options_${PKG_VER}-1_amd64.deb")
+    elif [[ -f "$REPO/target/mx-options_0.1.0-1_amd64.deb" ]]; then
+        TARGETS+=("$REPO/target/mx-options_0.1.0-1_amd64.deb")
+    fi
+    if [[ -f "$REPO/target/mx-options-${PKG_VER}-1.x86_64.rpm" ]]; then
+        TARGETS+=("$REPO/target/mx-options-${PKG_VER}-1.x86_64.rpm")
+    elif [[ -f "$REPO/target/mx-options-0.1.0-1.x86_64.rpm" ]]; then
         TARGETS+=("$REPO/target/mx-options-0.1.0-1.x86_64.rpm")
     fi
 fi

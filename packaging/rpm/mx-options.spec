@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 %define _build_id_links none
 
-%{!?pkg_version: %define pkg_version 0.1.0}
+%{!?pkg_version: %define pkg_version 0.1.1}
 %{!?pkg_release: %define pkg_release 1}
 
 Name:           mx-options

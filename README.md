@@ -61,7 +61,7 @@ On Ubuntu 24.04 and later, the GTK package is named `libgtk-3-0t64`; the `.deb` 
 Download the `.deb` package from the [**Releases**](https://github.com/Panxio/mxpilot/releases) section. **Use `apt`, not `dpkg`** — `apt` automatically resolves and installs any missing shared libraries:
 
 ```bash
-sudo apt install ./mx-options_0.1.0-1_amd64.deb
+sudo apt install ./mx-options_*_amd64.deb
 ```
 
 ### Fedora, RHEL, and openSUSE (`.rpm`)
@@ -69,7 +69,7 @@ sudo apt install ./mx-options_0.1.0-1_amd64.deb
 Download the `.rpm` package from [**Releases**](https://github.com/Panxio/mxpilot/releases) and install it with `dnf`:
 
 ```bash
-sudo dnf install ./mx-options-0.1.0-1.x86_64.rpm
+sudo dnf install ./mx-options-*.x86_64.rpm
 ```
 
 ### First Launch
