@@ -29,6 +29,8 @@ fn main() {
             commands::get_battery,
             commands::set_action,
             commands::start_daemon_service,
+            commands::is_daemon_service_enabled,
+            commands::set_daemon_service_autostart,
             commands::get_gui_memory,
             commands::set_locale,
         ])

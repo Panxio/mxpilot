@@ -1,0 +1,3 @@
+# Preset systemd para mx-options.service
+# Habilita el servicio de usuario por defecto para sesiones de escritorio
+enable mx-options.service

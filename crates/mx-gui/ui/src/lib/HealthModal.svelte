@@ -1,15 +1,43 @@
 <script>
   import { showHealthModal, healthData, guiMemoryKb } from './stores.js';
   import { t } from './i18n.js';
-  import { getHealth, getGuiMemory } from './api.js';
+  import { getHealth, getGuiMemory, isDaemonServiceEnabled, setDaemonServiceAutostart } from './api.js';
 
   let isLoading = false;
   let copyFeedback = false;
+  let isAutostartEnabled = null;
+  let isTogglingAutostart = false;
+
+  async function checkAutostart() {
+    try {
+      isAutostartEnabled = await isDaemonServiceEnabled();
+    } catch (e) {
+      console.warn('Error comprobando estado de autostart:', e);
+    }
+  }
+
+  async function toggleAutostart() {
+    if (isTogglingAutostart) return;
+    isTogglingAutostart = true;
+    try {
+      const target = !isAutostartEnabled;
+      await setDaemonServiceAutostart(target);
+      isAutostartEnabled = target;
+    } catch (e) {
+      console.error('Error modificando autostart:', e);
+    } finally {
+      isTogglingAutostart = false;
+    }
+  }
+
+  $: if ($showHealthModal) {
+    checkAutostart();
+  }
 
   async function refreshHealth() {
     isLoading = true;
     try {
-      const [h, mem] = await Promise.all([getHealth(), getGuiMemory()]);
+      const [h, mem] = await Promise.all([getHealth(), getGuiMemory(), checkAutostart()]);
       healthData.set(h);
       guiMemoryKb.set(mem);
     } catch (err) {
@@ -112,6 +140,28 @@
                 <div class="font-medium text-slate-200 mt-0.5 font-mono">{($guiMemoryKb / 1024).toFixed(2)} MB</div>
               </div>
             </div>
+          </div>
+
+          <!-- Control de Autoarranque con el Sistema -->
+          <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-center justify-between">
+            <div class="pr-2">
+              <div class="font-medium text-slate-200">{$t('modal_autostart_title')}</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">{$t('modal_autostart_desc')}</div>
+              <div class="mt-1 flex items-center space-x-1.5">
+                <span class="w-1.5 h-1.5 rounded-full {isAutostartEnabled ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+                <span class="text-[11px] font-mono {isAutostartEnabled ? 'text-emerald-400 font-medium' : 'text-slate-400'}">
+                  {isAutostartEnabled === null ? $t('modal_querying') : (isAutostartEnabled ? $t('modal_autostart_enabled') : $t('modal_autostart_disabled'))}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={isTogglingAutostart || isAutostartEnabled === null}
+              on:click={toggleAutostart}
+              class="px-3 py-1.5 rounded-xl text-xs font-medium transition-colors border shrink-0 {isAutostartEnabled ? 'bg-slate-800 hover:bg-slate-700 text-rose-300 border-slate-700' : 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/50'}"
+            >
+              {isTogglingAutostart ? '...' : (isAutostartEnabled ? $t('modal_autostart_btn_disable') : $t('modal_autostart_btn_enable'))}
+            </button>
           </div>
 
           {#if $healthData.last_error}

@@ -323,6 +323,10 @@ impl IpcServer {
                             } else {
                                 s.mapping.insert(cid, action);
                             }
+                            // Persistir inmediatamente a disco de forma atómica (Invariante 3)
+                            if let Err(e) = crate::profile::save_profile(&s.mapping) {
+                                log::warn!("No se pudo persistir el perfil a disco: {}", e);
+                            }
                             IpcResponse::ok_empty(req_id)
                         }
                         Ok(Err(e)) => IpcResponse::error(req_id, e),
@@ -333,9 +337,23 @@ impl IpcServer {
                 }
             }
             IpcCommand::ReloadProfile => {
-                log::info!("Petición reload_profile recibida vía IPC.");
-                // Honestidad operativa (Regla de Oro): los perfiles persistentes se integran en Fase 4
-                IpcResponse::error(req_id, "reload_profile is not implemented yet (profile storage planned for Phase 4)")
+                log::info!("Petición reload_profile recibida vía IPC. Recargando perfil desde disco...");
+                let new_mapping = crate::profile::load_profile();
+                {
+                    let mut s = self.state.write().unwrap_or_else(|e| e.into_inner());
+                    s.mapping = new_mapping;
+                }
+
+                let (reply_tx, reply_rx) = std::sync::mpsc::sync_channel(1);
+                if self.cmd_sender.send(DaemonCommand::ReloadProfile { reply: reply_tx }).is_ok() {
+                    match reply_rx.recv_timeout(HW_REPLY_TIMEOUT) {
+                        Ok(Ok(())) => IpcResponse::ok(req_id, "Profile reloaded and applied"),
+                        Ok(Err(e)) => IpcResponse::error(req_id, e),
+                        Err(_) => IpcResponse::error(req_id, "Timeout recargando perfil en hardware"),
+                    }
+                } else {
+                    IpcResponse::ok(req_id, "Profile reloaded in memory")
+                }
             }
         }
     }

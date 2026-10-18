@@ -97,6 +97,7 @@ exit 0
 %attr(0755,root,root) /usr/bin/mx-probe
 /usr/lib/udev/rules.d/70-mx-options.rules
 /usr/lib/systemd/user/mx-options.service
+/usr/lib/systemd/user-preset/50-mx-options.preset
 /usr/share/applications/mx-options.desktop
 /usr/share/doc/mx-options/LICENSE
 /usr/share/doc/mx-options/copyright

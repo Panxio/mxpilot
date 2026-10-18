@@ -55,3 +55,19 @@ export async function setGuiLocale(locale) {
   } catch (_) {}
 }
 
+/**
+ * Consulta si el servicio systemd está habilitado para iniciar en el arranque.
+ * @returns {Promise<boolean>}
+ */
+export async function isDaemonServiceEnabled() {
+  return await invoke('is_daemon_service_enabled');
+}
+
+/**
+ * Habilita o deshabilita el autoarranque del servicio en cada inicio de sesión.
+ * @param {boolean} enable
+ */
+export async function setDaemonServiceAutostart(enable) {
+  return await invoke('set_daemon_service_autostart', { enable });
+}
+

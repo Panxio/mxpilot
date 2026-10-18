@@ -1,4 +1,4 @@
-use crate::ipc::protocol::{ActionPayload, BatteryData, DaemonHealth, StatusData, TOP_BUTTON_CID};
+use crate::ipc::protocol::{ActionPayload, BatteryData, DaemonHealth, StatusData};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -49,14 +49,7 @@ pub struct DaemonState {
 
 impl DaemonState {
     pub fn new() -> Self {
-        let mut mapping = HashMap::new();
-        // Mapeo por defecto para el botón superior: Super / Meta
-        mapping.insert(
-            TOP_BUTTON_CID,
-            ActionPayload::SingleKey {
-                key: "KEY_LEFTMETA".to_string(),
-            },
-        );
+        let mapping = crate::profile::load_profile();
 
         Self {
             state: State::Disconnected,
@@ -148,6 +141,7 @@ pub fn get_process_rss_kb() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ipc::protocol::TOP_BUTTON_CID;
 
     #[test]
     fn test_daemon_state_initial() {

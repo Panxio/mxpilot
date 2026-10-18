@@ -55,9 +55,10 @@ pub async fn set_action(
 pub async fn start_daemon_service(state: State<'_, AppState>) -> Result<String, String> {
     let client = Arc::clone(&state.client);
     tauri::async_runtime::spawn_blocking(move || {
-        // Invocar systemctl sin shell de forma segura
+        // Invocar systemctl sin shell de forma segura (Invariante 5)
+        // Habilita para el arranque futuro e inicia inmediatamente en la sesión actual
         let mut cmd = Command::new("/usr/bin/systemctl");
-        cmd.args(["--user", "start", "mx-options.service"]);
+        cmd.args(["--user", "enable", "--now", "mx-options.service"]);
         cmd.stdin(Stdio::null());
         cmd.stdout(Stdio::null());
         cmd.stderr(Stdio::null());
@@ -68,7 +69,7 @@ pub async fn start_daemon_service(state: State<'_, AppState>) -> Result<String, 
 
         if !status.success() {
             return Err(format!(
-                "systemctl --user start mx-options falló con código: {:?}",
+                "systemctl --user enable --now mx-options falló con código: {:?}",
                 status.code()
             ));
         }
@@ -77,7 +78,7 @@ pub async fn start_daemon_service(state: State<'_, AppState>) -> Result<String, 
         for _ in 0..15 {
             std::thread::sleep(Duration::from_millis(200));
             if client.ping().is_ok() {
-                return Ok("Servicio mx-options iniciado y respondiendo".into());
+                return Ok("Servicio mx-options habilitado, iniciado y respondiendo".into());
             }
         }
 
@@ -85,6 +86,48 @@ pub async fn start_daemon_service(state: State<'_, AppState>) -> Result<String, 
     })
     .await
     .map_err(|e| format!("Error en worker: {}", e))?
+}
+
+#[tauri::command]
+pub async fn is_daemon_service_enabled() -> Result<bool, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let mut cmd = Command::new("/usr/bin/systemctl");
+        cmd.args(["--user", "is-enabled", "mx-options.service"]);
+        cmd.stdin(Stdio::null());
+        cmd.stdout(Stdio::piped());
+        cmd.stderr(Stdio::null());
+
+        let output = cmd.output().map_err(|e| format!("No se pudo ejecutar systemctl: {}", e))?;
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        Ok(stdout.trim() == "enabled")
+    })
+    .await
+    .map_err(|e| format!("Error en worker de autostart: {}", e))?
+}
+
+#[tauri::command]
+pub async fn set_daemon_service_autostart(enable: bool) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let action = if enable { "enable" } else { "disable" };
+        let mut cmd = Command::new("/usr/bin/systemctl");
+        cmd.args(["--user", action, "mx-options.service"]);
+        cmd.stdin(Stdio::null());
+        cmd.stdout(Stdio::null());
+        cmd.stderr(Stdio::null());
+
+        let status = cmd.status().map_err(|e| format!("No se pudo ejecutar systemctl: {}", e))?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(format!(
+                "systemctl --user {} mx-options falló con código: {:?}",
+                action,
+                status.code()
+            ))
+        }
+    })
+    .await
+    .map_err(|e| format!("Error en worker de autostart: {}", e))?
 }
 
 #[tauri::command]

@@ -85,6 +85,10 @@ for name in os.listdir(staging_bin):
 cp "$REPO/packaging/common/mx-options.service" "$STAGING/usr/lib/systemd/user/mx-options.service"
 chmod 0644 "$STAGING/usr/lib/systemd/user/mx-options.service"
 
+mkdir -p "$STAGING/usr/lib/systemd/user-preset"
+cp "$REPO/packaging/common/50-mx-options.preset" "$STAGING/usr/lib/systemd/user-preset/50-mx-options.preset"
+chmod 0644 "$STAGING/usr/lib/systemd/user-preset/50-mx-options.preset"
+
 cp "$REPO/packaging/common/70-mx-options.rules" "$STAGING/usr/lib/udev/rules.d/70-mx-options.rules"
 chmod 0644 "$STAGING/usr/lib/udev/rules.d/70-mx-options.rules"
 

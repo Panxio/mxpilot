@@ -35,6 +35,9 @@ pub enum DaemonCommand {
     RefreshBattery {
         reply: SyncSender<Result<(u8, String), String>>,
     },
+    ReloadProfile {
+        reply: SyncSender<Result<(), String>>,
+    },
     Shutdown,
 }
 
@@ -279,9 +282,16 @@ pub fn run_hid_worker(
             let s = state.read().unwrap();
             for &cid in s.mapping.keys() {
                 if is_valid_cid(cid) && cid != TOP_BUTTON_CID {
-                    if let Ok(()) = device.set_cid_divert(cid, true) {
-                        active_diverted_cids.insert(cid);
-                        tracked_pressed.insert(cid, None);
+                    log::info!("Re-aplicando divert a CID 0x{:04X}...", cid);
+                    match device.set_cid_divert(cid, true) {
+                        Ok(()) => {
+                            log::info!("Divert re-aplicado exitosamente a CID 0x{:04X}", cid);
+                            active_diverted_cids.insert(cid);
+                            tracked_pressed.insert(cid, None);
+                        }
+                        Err(e) => {
+                            log::warn!("Fallo al re-aplicar divert a CID 0x{:04X}: {}", cid, e);
+                        }
                     }
                 }
             }
@@ -333,6 +343,42 @@ pub fn run_hid_worker(
                                 let _ = reply.send(Err(e.to_string()));
                             }
                         }
+                    }
+                    DaemonCommand::ReloadProfile { reply } => {
+                        let desired_cids: HashSet<u16> = {
+                            let s = state.read().unwrap();
+                            s.mapping.keys().copied().filter(|&c| is_valid_cid(c)).collect()
+                        };
+
+                        // 1. Activar CIDs deseados que no estén activos
+                        for &cid in &desired_cids {
+                            if !active_diverted_cids.contains(&cid) {
+                                if let Ok(()) = device.set_cid_divert(cid, true) {
+                                    active_diverted_cids.insert(cid);
+                                    tracked_pressed.entry(cid).or_insert(None);
+                                }
+                            }
+                        }
+
+                        // 2. Desactivar CIDs que ya no están en el nuevo perfil
+                        let to_remove: Vec<u16> = active_diverted_cids
+                            .iter()
+                            .copied()
+                            .filter(|c| !desired_cids.contains(c))
+                            .collect();
+
+                        for cid in to_remove {
+                            let _ = device.set_cid_divert(cid, false);
+                            active_diverted_cids.remove(&cid);
+                            tracked_pressed.remove(&cid);
+                        }
+
+                        {
+                            let mut s = state.write().unwrap();
+                            s.diverted_cids = active_diverted_cids.iter().copied().collect();
+                        }
+
+                        let _ = reply.send(Ok(()));
                     }
                     DaemonCommand::Shutdown => {
                         break;
@@ -420,6 +466,9 @@ fn drain_commands_disconnected(cmd_receiver: &Receiver<DaemonCommand>) {
             }
             DaemonCommand::RefreshBattery { reply } => {
                 let _ = reply.send(Err("Dispositivo no conectado".to_string()));
+            }
+            DaemonCommand::ReloadProfile { reply } => {
+                let _ = reply.send(Ok(()));
             }
             DaemonCommand::Shutdown => {}
         }

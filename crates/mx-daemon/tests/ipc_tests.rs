@@ -239,6 +239,9 @@ fn test_ipc_reload_profile_and_battery() {
                 DaemonCommand::SetAction { reply, .. } => {
                     let _ = reply.send(Ok(()));
                 }
+                DaemonCommand::ReloadProfile { reply } => {
+                    let _ = reply.send(Ok(()));
+                }
                 DaemonCommand::Shutdown => break,
             }
         }
@@ -250,16 +253,16 @@ fn test_ipc_reload_profile_and_battery() {
     stream.set_read_timeout(Some(Duration::from_millis(1500))).unwrap();
     let mut reader = BufReader::new(stream.try_clone().unwrap());
 
-    // 1. reload_profile devuelve error honesto informando planificación en Fase 4
+    // 1. reload_profile recarga exitosamente el perfil y responde Ok
     stream.write_all(b"{\"id\":100,\"cmd\":\"reload_profile\"}\n").unwrap();
     let mut line = String::new();
     reader.read_line(&mut line).unwrap();
     let resp: IpcResponse = serde_json::from_str(&line).unwrap();
-    if let IpcResponse::Error { id, message } = resp {
+    if let IpcResponse::Ok { id, data } = resp {
         assert_eq!(id, Some(100));
-        assert!(message.contains("Phase 4"));
+        assert!(data.unwrap().as_str().unwrap().contains("Profile reloaded"));
     } else {
-        panic!("Esperaba error honesto para reload_profile");
+        panic!("Esperaba éxito para reload_profile");
     }
 
     // 2. get_battery sin batería en estado -> worker responde error -> error
