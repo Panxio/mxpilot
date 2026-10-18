@@ -49,6 +49,7 @@ rm -rf "$RPM_ROOT"
 mkdir -p "$STAGING/usr/bin"
 mkdir -p "$STAGING/usr/lib/udev/rules.d"
 mkdir -p "$STAGING/usr/lib/systemd/user"
+mkdir -p "$STAGING/usr/lib/systemd/user-preset"
 mkdir -p "$STAGING/usr/share/applications"
 mkdir -p "$STAGING/usr/share/doc/mx-options"
 mkdir -p "$RPM_TOPDIR"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
@@ -86,6 +87,9 @@ for name in os.listdir(staging_bin):
 # Copia de archivos de configuración y servicios
 cp "$REPO/packaging/common/mx-options.service" "$STAGING/usr/lib/systemd/user/mx-options.service"
 chmod 0644 "$STAGING/usr/lib/systemd/user/mx-options.service"
+
+cp "$REPO/packaging/common/50-mx-options.preset" "$STAGING/usr/lib/systemd/user-preset/50-mx-options.preset"
+chmod 0644 "$STAGING/usr/lib/systemd/user-preset/50-mx-options.preset"
 
 cp "$REPO/packaging/common/70-mx-options.rules" "$STAGING/usr/lib/udev/rules.d/70-mx-options.rules"
 chmod 0644 "$STAGING/usr/lib/udev/rules.d/70-mx-options.rules"
